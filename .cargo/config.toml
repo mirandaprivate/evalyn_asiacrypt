@@ -1,0 +1,6 @@
+[alias]
+test-verbose = "test --release -- --nocapture"
+run-example = "run --release -p composite --example"
+
+[env]
+RAYON_NUM_THREADS = "64"

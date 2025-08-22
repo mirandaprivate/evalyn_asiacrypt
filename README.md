@@ -16,7 +16,7 @@ This repository is a frozen snapshot intended for reproducing the paper's experi
 - `composite/`: Composite protocols and application logic; includes the (mock) neural network example `experiment_nn`.
 - `mat/`: Matrix data structures, utilities, and protocol primitives (R1CS support behind the `r1cs` feature).
 - `fsproof/`: Fiat–Shamir transcript and proof helpers used across protocols.
-- `poly-commit/`: Polynomial commitment schemes (hybrid, KZG, IPA, Marlin, etc.). This crate is a fork of arkworks' poly-commit with local modifications.
+- `poly-commit/`: Polynomial commitment schemes (KZG, IPA, Marlin, etc.). This crate is a fork of arkworks' poly-commit with local modifications.
 
 All crates target Rust 2021 edition and default to `std` and `parallel` features where available.
 
@@ -88,25 +88,34 @@ cargo test -p atomic_proof --release
 
 We conducted experiments on an Alibaba Cloud Elastic Compute Service (ECS) instance equipped with 64 ARMv8 (aarch64) cores clocked at 3.0 GHz and 126 GB RAM. The server has 64 MB shared L3 cache and runs Ubuntu 22.04 LTS (Linux kernel 5.15).
 
-### Model/config
+### Model/config: Quantized Multi-Layer Perceptron (MLP)
 
-Unless otherwise noted, results are for a mock quantized MLP with layers of the form:
+We evaluated our system using a mock quantized Multi-Layer Perceptron (MLP), a fundamental NN architecture.
+The MLP consists of 1024 layers, each defined by the transformation:
 
-Y = W X + B, where W is a 1024 × 1024 matrix per layer, 1024 layers (e.g., total parameters ≈ 2^30).
+\[ Y = \text{sigmoid}(W \cdot X + B) \]
+
+where:
+- \( W \): A 1024 × 1024 weight matrix, quantized to 8-bit integers.
+- \( X \): A 1024-dimensional input vector, quantized to 8-bit integers.
+- \( Y \): A 1024-dimensional output vector.
+- \( B \): A 1024-dimensional bias vector, quantized to 8-bit integers.
+
+Each layer contains \( 1024 \times 1024 + 1024 = 1,049,600 \) parameters, resulting in a total of approximately \( 1,049,600 \times 1,024 \approx 1.075 \times 10^9 \approx 2^{30} \) parameters across 1024 layers.
 
 ### Performance summary
 
-Overall metrics for the NN example under two quantization modes.
+Overall metrics for the NN example under two quantization modes (`RAYON_NUM_THREADS=64`).
 
 | Metric                               | 8-bit (i8/i32) | 16-bit (i16/i64) |
 |--------------------------------------|----------------:|-----------------:|
-| Commitment time — parameters (s)     | TBD             | 1212.14          |
-| Commitment time — structure (s)      | TBD             | 958.80           |
-| Commitment size (MB)                 | TBD             | TBD              |
-| Prover time — total (s)              | TBD             | TBD              |
-| Proof size (MB)                      | TBD             | TBD              |
-| Verifier time (s)                    | TBD             | TBD              |
-| Peak RAM (GB)                        | TBD             | TBD              |
+| Commitment time — parameters (s)     | 1104.60         | 1210.48          |
+| Commitment time — structure (s)      | 931.60          | 914.42           |
+| Commitment size (KB)                 | 41.69           | 41.69            |
+| Prover time — total (s)              | 1747.62         | 1839.24          |
+| Proof size (KB)                      | 98.84           | 98.84            |
+| Verifier time (ms)                   | 220.13          | 220.32           |
+| Peak RAM (GB)                        | 89.41           | 103.69           |
 
 ### Prover time breakdown
 
@@ -114,24 +123,26 @@ Detailed decomposition of prover wall-clock time.
 
 | Component                           | 8-bit (s) | 16-bit (s) |
 |-------------------------------------|----------:|-----------:|
-| Auxiliary input commitment          | TBD       | 60.26      |
-| Proof reduction                     | TBD       | TBD        |
-| PoP proving                         | TBD       | TBD        |
-| Leaf commitment opening             | TBD       | TBD        |
-| Fiat–Shamir transform proof         | TBD       | 412.50     |
-| Other/overhead                      | TBD       | TBD        |
-| Total                               | TBD       | TBD        |
+| Auxiliary input commitment          | 37.61     | 61.22      |
+| Proof reduction                     | 230.18    | 281.34     |
+| PoP proving                         | 976.63    | 960.76     |
+| Leaf commitment opening             | 95.24     | 109.36     |
+| Fiat–Shamir transform proving       | 407.96    | 426.56     |
+| Total                               | 1747.62   | 1839.24    |
+| v.s Unverified computation          | 7.88s     | 11.59      |
 
 ### Notes on measurement
 
 - Build with `--release` and set `RAYON_NUM_THREADS` explicitly.
 - Keep raw logs in `composite/example/*.log`.
+- Both PoP proving and Fiat-Shamir transform proving invokes Groth16 prover, which we havent turn on the parallel feature  
 
 ### Notes on RAM usage
 
-- Peak RAM is roughly proportional to the total number of network parameters (assuming batch size = 1) and also increases with the quantization width.
-- Introducing intermediate (per-layer or per-block) commitments partitions a large model into smaller sub-NNs, reducing the prover's peak RAM. This comes at the cost of a roughly proportional increase in proof size (and verifier work).
-- In practice, choose a partition granularity (e.g., commit every k layers) that fits the RAM budget while keeping the overall proof size acceptable.
+- Peak RAM is roughly proportional to the total number of NN parameters.
+- Introducing intermediate (per-layer or per-block) commitments partitions a large model into smaller sub-NNs, reducing the prover's peak RAM.
+- However, decomposing a large NN into smaller components increases the overall proof size and the verifier time.
+- Both PoP proving and Fiat–Shamir transform proving invoke the Groth16 prover, for which we have not yet enabled the parallelization feature.
 
 ## Windows/WSL notes
 
@@ -159,4 +170,4 @@ If you use this codebase in academic work, please cite the paper:
 
 Scalable zkSNARKs for Matrix Computations: A Generic Framework for Verifiable Deep Learning
 
-An appropriate BibTeX entry can be added here when available.# evalyn_asiacrypt
+An appropriate BibTeX entry can be added here when available.

@@ -1,0 +1,37 @@
+[package]
+name = "atomic_proof"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mat = { path = "../mat", features = ["std", "parallel", "r1cs"] }
+fsproof = { path = "../fsproof", features = ["std", "parallel"] }
+
+ark-ff = { version = "^0.5.0", features = ["std", "parallel"] }
+ark-std = { version = "^0.5.0", features = ["std", "parallel"] }
+ark-poly = { version = "^0.5.0", features = ["std", "parallel"] }
+ark-relations = { version = "^0.5.0", features = ["std"] }
+ark-r1cs-std = { version = "^0.5.0", features = ["std"] }
+ark-crypto-primitives = { version = "^0.5.0", features = ["std", "sponge", "r1cs"] }
+ark-groth16 = { version = "^0.5.0", features = ["std", "parallel"] }
+ark-snark = "^0.5.0"  
+ark-serialize = { version = "^0.5.0", features = ["std", "derive"] }
+ark-ec = { version = "^0.5.0", features = ["std", "parallel"] }
+
+ark-bls12-381 = { version = "^0.5.0", features = ["std", "curve"] }
+
+derivative = "2.2"
+libc = "0.2"
+rayon = "1.7"
+rand = "0.9"
+hex = "0.4"
+
+[dev-dependencies]
+criterion = { version = "0.7.0", features = ["html_reports"] }
+
+[features]
+default = ["std", "parallel"]
+std = []
+parallel = []
+
+# Profiles are configured at workspace root

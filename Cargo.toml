@@ -1,0 +1,37 @@
+[workspace]
+members = [
+    "atomic_proof",
+    "composite",
+    "mat",
+    "fsproof",
+    "poly-commit",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+authors = ["arkworks contributors"]
+description = "A library for constructing zkSNARKs for matrix computations"
+repository = "https://github.com/mirandaprivate/evalyn"
+documentation = "https://docs.rs/evalyn"
+keywords = ["cryptography", "commitments", "elliptic-curves", "pairing", "zksnark"]
+include = ["Cargo.toml", "src", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
+categories = ["cryptography"]
+license = "MIT/Apache-2.0"
+edition = "2021"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+incremental = true
+debug = true
+
+[profile.test]
+opt-level = 3
+debug-assertions = true
+incremental = true
+debug = true
+
+[patch.crates-io]
+# 移除这行，因为现在使用本地版本
+# ark-poly-commit = { git = "https://github.com/mirandaprivate/poly-commit.git", rev = "79a5e43613d9b8ea2d14bc3e33d70c5e9f4b8ae9" }

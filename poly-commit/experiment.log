@@ -1,0 +1,115 @@
+*********************************************
+Running experiments for 2^30 to 2^30 variables
+
+
+***********************************************
+Running experiments for 2e30 variables
+
+SMART-PC on BLS12-381:
+SRS size: 11011832 B
+Setup time: 2.016412942 s
+Tier 1 time in short bit: 512.588308286s
+Commit time: 519.751488572 s
+Commit size: 1573448 B
+Open time: 56.982664849 s
+Verify time: 131.10299799999999 ms
+Proof size: 36784 B
+SMART-PC  verified: true
+Tier 1 time in boolean: 25.539349821s
+Commit time (boolean): 32.398804469 s
+SMART-PC (boolean)  verified: true
+
+ ****Max RAM: 73103388 KB
+
+
+
+***********************************************
+
+Brakedown on BN254:
+SRS size: 688851929 B
+Setup time: 3546.2249 ms
+Commit time: 161.62746 s
+Commitment size: 64 B
+Open time: 108.4596 s
+Verify time: 31859.107 ms
+Proof size: 215594193 B
+
+ ****Max RAM: 190667388 KB
+
+
+
+***********************************************
+
+Hyrax on BN254:
+SRS size: 2097224 B
+Setup time: 23.346754 ms
+Commit time: 274.51498 s
+Commitment size: 2097160 B
+Open time: 4.8692675 s
+Verify time: 1886.997 ms
+Proof size: 1048760 B
+
+ ****Max RAM: 105075640 KB
+
+
+
+***********************************************
+
+Lingero on BN254:
+SRS size: 17 B
+Setup time: 0.001805 ms
+Commit time: 136.82997 s
+Commitment size: 64 B
+Open time: 50.406223 s
+Verify time: 7278.0054 ms
+Proof size: 57784481 B
+
+ ****Max RAM: 236297636 KB
+
+
+2e28 variables
+***********************************************
+
+KZG on BLS12-381:
+Setup time: 519.984903739s
+SRS size: 51539607664 B
+Commit time: 441.886881489s
+Commit size: 48B
+Open time: 694.283853275s
+Verify time: 3.999288ms
+Proof size: 81B
+
+ ****Max RAM: 402158664 KB
+
+
+2e28 variables
+***********************************************
+
+Marlin-PC on BLS12-381:
+SRS size: 103079215418 B
+Setup time: 505959.03 ms
+Commit time: 429.9436 s
+Commitment size: 97 B
+Open time: 709.23926 s
+Verify time: 4.088155 ms
+Proof size: 57 B
+
+ ****Max RAM: 405458892 KB
+
+
+2e26 variables
+***********************************************
+
+Sonic on BLS12-381:
+SRS size: 51539607867 B
+Setup time: 1234747.5 ms
+Commit time: 210.3688 s
+Commitment size: 96 B
+Open time: 335.27924 s
+Verify time: 4.052158 ms
+Proof size: 57 B
+
+ ****Max RAM: 311351684 KB
+
+
+

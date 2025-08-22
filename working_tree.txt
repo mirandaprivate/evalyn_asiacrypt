@@ -1,0 +1,210 @@
+zksmart v0.1.0 (/Users/miranda/git/zksmart/zksmart)
+├── ahash v0.8.11
+│   ├── cfg-if v1.0.0
+│   ├── once_cell v1.21.3
+│   └── zerocopy v0.7.35
+│   [build-dependencies]
+│   └── version_check v0.9.5
+├── ark-crypto-primitives v0.4.0
+│   ├── ark-ec v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568)
+│   │   ├── ahash v0.8.11 (*)
+│   │   ├── ark-ff v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568)
+│   │   │   ├── ark-ff-asm v0.4.2 (proc-macro) (https://github.com/mirandaprivate/algebra#e1075568)
+│   │   │   │   ├── quote v1.0.40
+│   │   │   │   │   └── proc-macro2 v1.0.95
+│   │   │   │   │       └── unicode-ident v1.0.18
+│   │   │   │   └── syn v2.0.100
+│   │   │   │       ├── proc-macro2 v1.0.95 (*)
+│   │   │   │       ├── quote v1.0.40 (*)
+│   │   │   │       └── unicode-ident v1.0.18
+│   │   │   ├── ark-ff-macros v0.4.2 (proc-macro) (https://github.com/mirandaprivate/algebra#e1075568)
+│   │   │   │   ├── num-bigint v0.4.6
+│   │   │   │   │   ├── num-integer v0.1.46
+│   │   │   │   │   │   └── num-traits v0.2.19
+│   │   │   │   │   │       [build-dependencies]
+│   │   │   │   │   │       └── autocfg v1.4.0
+│   │   │   │   │   └── num-traits v0.2.19 (*)
+│   │   │   │   ├── num-traits v0.2.19 (*)
+│   │   │   │   ├── proc-macro2 v1.0.95 (*)
+│   │   │   │   ├── quote v1.0.40 (*)
+│   │   │   │   └── syn v2.0.100 (*)
+│   │   │   ├── ark-serialize v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568)
+│   │   │   │   ├── ark-serialize-derive v0.4.2 (proc-macro) (https://github.com/mirandaprivate/algebra#e1075568)
+│   │   │   │   │   ├── proc-macro2 v1.0.95 (*)
+│   │   │   │   │   ├── quote v1.0.40 (*)
+│   │   │   │   │   └── syn v2.0.100 (*)
+│   │   │   │   ├── ark-std v0.4.0
+│   │   │   │   │   ├── num-traits v0.2.19
+│   │   │   │   │   │   └── libm v0.2.11
+│   │   │   │   │   │   [build-dependencies]
+│   │   │   │   │   │   └── autocfg v1.4.0
+│   │   │   │   │   ├── rand v0.8.5
+│   │   │   │   │   │   ├── libc v0.2.172
+│   │   │   │   │   │   ├── rand_chacha v0.3.1
+│   │   │   │   │   │   │   ├── ppv-lite86 v0.2.21
+│   │   │   │   │   │   │   │   └── zerocopy v0.8.24
+│   │   │   │   │   │   │   └── rand_core v0.6.4
+│   │   │   │   │   │   │       └── getrandom v0.2.15
+│   │   │   │   │   │   │           ├── cfg-if v1.0.0
+│   │   │   │   │   │   │           └── libc v0.2.172
+│   │   │   │   │   │   └── rand_core v0.6.4 (*)
+│   │   │   │   │   └── rayon v1.10.0
+│   │   │   │   │       ├── either v1.15.0
+│   │   │   │   │       └── rayon-core v1.12.1
+│   │   │   │   │           ├── crossbeam-deque v0.8.6
+│   │   │   │   │           │   ├── crossbeam-epoch v0.9.18
+│   │   │   │   │           │   │   └── crossbeam-utils v0.8.21
+│   │   │   │   │           │   └── crossbeam-utils v0.8.21
+│   │   │   │   │           └── crossbeam-utils v0.8.21
+│   │   │   │   ├── arrayvec v0.7.6
+│   │   │   │   ├── digest v0.10.7
+│   │   │   │   │   ├── block-buffer v0.10.4
+│   │   │   │   │   │   └── generic-array v0.14.7
+│   │   │   │   │   │       └── typenum v1.18.0
+│   │   │   │   │   │       [build-dependencies]
+│   │   │   │   │   │       └── version_check v0.9.5
+│   │   │   │   │   ├── crypto-common v0.1.6
+│   │   │   │   │   │   ├── generic-array v0.14.7 (*)
+│   │   │   │   │   │   └── typenum v1.18.0
+│   │   │   │   │   └── subtle v2.6.1
+│   │   │   │   ├── num-bigint v0.4.6 (*)
+│   │   │   │   └── rayon v1.10.0 (*)
+│   │   │   ├── ark-std v0.4.0 (*)
+│   │   │   ├── arrayvec v0.7.6
+│   │   │   ├── digest v0.10.7 (*)
+│   │   │   ├── educe v0.6.0 (proc-macro)
+│   │   │   │   ├── enum-ordinalize v4.3.0
+│   │   │   │   │   └── enum-ordinalize-derive v4.3.1 (proc-macro)
+│   │   │   │   │       ├── proc-macro2 v1.0.95 (*)
+│   │   │   │   │       ├── quote v1.0.40 (*)
+│   │   │   │   │       └── syn v2.0.100 (*)
+│   │   │   │   ├── proc-macro2 v1.0.95 (*)
+│   │   │   │   ├── quote v1.0.40 (*)
+│   │   │   │   └── syn v2.0.100 (*)
+│   │   │   ├── itertools v0.13.0
+│   │   │   │   └── either v1.15.0
+│   │   │   ├── num-bigint v0.4.6 (*)
+│   │   │   ├── num-traits v0.2.19 (*)
+│   │   │   ├── paste v1.0.15 (proc-macro)
+│   │   │   ├── rayon v1.10.0 (*)
+│   │   │   └── zeroize v1.8.1
+│   │   │       └── zeroize_derive v1.4.2 (proc-macro)
+│   │   │           ├── proc-macro2 v1.0.95 (*)
+│   │   │           ├── quote v1.0.40 (*)
+│   │   │           └── syn v2.0.100 (*)
+│   │   ├── ark-poly v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568)
+│   │   │   ├── ahash v0.8.11 (*)
+│   │   │   ├── ark-ff v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   │   │   ├── ark-serialize v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   │   │   ├── ark-std v0.4.0 (*)
+│   │   │   ├── educe v0.6.0 (proc-macro) (*)
+│   │   │   ├── hashbrown v0.15.2
+│   │   │   │   └── allocator-api2 v0.2.21
+│   │   │   └── rayon v1.10.0 (*)
+│   │   ├── ark-serialize v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   │   ├── ark-std v0.4.0 (*)
+│   │   ├── educe v0.6.0 (proc-macro) (*)
+│   │   ├── hashbrown v0.15.2 (*)
+│   │   ├── itertools v0.13.0 (*)
+│   │   ├── num-bigint v0.4.6 (*)
+│   │   ├── num-integer v0.1.46 (*)
+│   │   ├── num-traits v0.2.19 (*)
+│   │   ├── rayon v1.10.0 (*)
+│   │   └── zeroize v1.8.1 (*)
+│   ├── ark-ff v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   ├── ark-relations v0.4.0
+│   │   ├── ark-ff v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   │   ├── ark-std v0.4.0 (*)
+│   │   ├── tracing v0.1.41
+│   │   │   ├── pin-project-lite v0.2.16
+│   │   │   └── tracing-core v0.1.33
+│   │   │       └── once_cell v1.21.3
+│   │   └── tracing-subscriber v0.2.25
+│   │       └── tracing-core v0.1.33 (*)
+│   ├── ark-serialize v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   ├── ark-snark v0.4.0
+│   │   ├── ark-ff v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   │   ├── ark-relations v0.4.0 (*)
+│   │   ├── ark-serialize v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   │   └── ark-std v0.4.0 (*)
+│   ├── ark-std v0.4.0 (*)
+│   ├── blake2 v0.10.6
+│   │   └── digest v0.10.7 (*)
+│   ├── derivative v2.2.0 (proc-macro)
+│   │   ├── proc-macro2 v1.0.95 (*)
+│   │   ├── quote v1.0.40 (*)
+│   │   └── syn v1.0.109
+│   │       ├── proc-macro2 v1.0.95 (*)
+│   │       ├── quote v1.0.40 (*)
+│   │       └── unicode-ident v1.0.18
+│   ├── digest v0.10.7 (*)
+│   └── sha2 v0.10.8
+│       ├── cfg-if v1.0.0
+│       ├── cpufeatures v0.2.17
+│       │   └── libc v0.2.172
+│       └── digest v0.10.7 (*)
+├── ark-ec v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+├── ark-ff v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+├── ark-poly v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+├── ark-poly-commit v0.4.0 (https://github.com/mirandaprivate/poly-commit.git#0cb579a1)
+│   ├── ahash v0.8.11 (*)
+│   ├── ark-crypto-primitives v0.4.0 (*)
+│   ├── ark-ec v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   ├── ark-ff v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   ├── ark-poly v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   ├── ark-relations v0.4.0 (*)
+│   ├── ark-serialize v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   ├── ark-std v0.4.0 (*)
+│   ├── blake2 v0.10.6 (*)
+│   ├── derivative v2.2.0 (proc-macro) (*)
+│   ├── digest v0.10.7 (*)
+│   ├── libc v0.2.172
+│   ├── merlin v3.0.0
+│   │   ├── byteorder v1.5.0
+│   │   ├── keccak v0.1.5
+│   │   │   └── cpufeatures v0.2.17 (*)
+│   │   ├── rand_core v0.6.4 (*)
+│   │   └── zeroize v1.8.1 (*)
+│   ├── num-traits v0.2.19 (*)
+│   ├── rand v0.8.5 (*)
+│   ├── rayon v1.10.0 (*)
+│   └── sha2 v0.10.8 (*)
+├── ark-relations v0.4.0 (*)
+├── ark-serialize v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+├── ark-std v0.4.0 (*)
+├── blake2 v0.10.6 (*)
+├── derivative v2.2.0 (proc-macro) (*)
+├── digest v0.10.7 (*)
+├── jemallocator v0.5.4
+│   ├── jemalloc-sys v0.5.4+5.3.0-patched
+│   │   └── libc v0.2.172
+│   │   [build-dependencies]
+│   │   └── cc v1.2.19
+│   │       └── shlex v1.3.0
+│   └── libc v0.2.172
+├── libc v0.2.172
+├── merlin v3.0.0 (*)
+├── num-traits v0.2.19 (*)
+├── rand v0.8.5 (*)
+├── rayon v1.10.0 (*)
+└── sha2 v0.10.8 (*)
+[dev-dependencies]
+├── ark-bls12-377 v0.4.0 (https://github.com/mirandaprivate/algebra#e1075568)
+│   ├── ark-ec v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   ├── ark-ff v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   └── ark-std v0.4.0 (*)
+├── ark-bls12-381 v0.4.0 (https://github.com/mirandaprivate/algebra#e1075568)
+│   ├── ark-ec v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   ├── ark-ff v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   ├── ark-serialize v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   └── ark-std v0.4.0 (*)
+├── ark-bn254 v0.4.0 (https://github.com/mirandaprivate/algebra#e1075568)
+│   ├── ark-ec v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   ├── ark-ff v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   └── ark-std v0.4.0 (*)
+├── ark-ed-on-bls12-381 v0.4.0
+│   ├── ark-bls12-381 v0.4.0 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   ├── ark-ec v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   ├── ark-ff v0.4.2 (https://github.com/mirandaprivate/algebra#e1075568) (*)
+│   └── ark-std v0.4.0 (*)
+└── rand_chacha v0.3.1 (*)

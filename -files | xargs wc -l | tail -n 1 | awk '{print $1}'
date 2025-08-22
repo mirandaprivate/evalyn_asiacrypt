@@ -1,0 +1,357 @@
+10	22	atomic_proof/src/atomic_pop.rs
+13	3	atomic_proof/src/atomic_protocol.rs
+27	0	atomic_proof/src/protocols/batchproj.rs
+569	27	atomic_proof/src/protocols/concat.rs
+423	24	atomic_proof/src/protocols/grand_prod.rs
+1	10	atomic_proof/src/protocols/hadamard.rs
+1	0	atomic_proof/src/protocols/mod.rs
+1	9	atomic_proof/src/protocols/mul.rs
+0	6	atomic_proof/src/protocols/sub.rs
+19	106	atomic_proof/src/protocols/zero.rs
+35	3	mat/src/utils/linear.rs
+270	2	atomic_proof/src/atomic_pop.rs
+41	11	atomic_proof/src/atomic_protocol.rs
+2	2	atomic_proof/src/lib.rs
+106	42	atomic_proof/src/pop/arithmetic_expression.rs
+49	30	atomic_proof/src/pop/groth16.rs
+0	0	atomic_proof/src/{util.rs => protocols/batchproj.rs}
+1	1	atomic_proof/src/protocols/concat.rs
+487	0	atomic_proof/src/protocols/grand_prod.rs
+403	404	atomic_proof/src/protocols/hadamard.rs
+262	1337	atomic_proof/src/protocols/litebullet.rs
+2	1	atomic_proof/src/protocols/mod.rs
+67	88	atomic_proof/src/protocols/mul.rs
+139	162	atomic_proof/src/protocols/sub.rs
+35	58	atomic_proof/src/protocols/zero.rs
+173	0	atomic_proof/src/utils.rs
+2	2	fsproof/src/helper_trans.rs
+66	0	mat/src/protocols/grand_product.rs
+54	19	mat/src/utils/sparse.rs
+68	0	atomic_proof/src/protocols/concat.rs
+4	4	atomic_proof/src/protocols/sub.rs
+19	6	atomic_proof/src/protocols/zero.rs
+1	1	fsproof/src/helper_trans.rs
+15	7	atomic_proof/src/protocols/sub.rs
+57	39	atomic_proof/src/protocols/zero.rs
+7	0	fsproof/src/helper_trans.rs
+53	0	mat/src/utils/sparse.rs
+24	0	atomic_proof/src/atomic_pop.rs
+2	0	atomic_proof/src/atomic_protocol.rs
+6	0	atomic_proof/src/protocols/mod.rs
+304	342	atomic_proof/src/protocols/mul.rs
+357	0	atomic_proof/src/protocols/sub.rs
+655	0	atomic_proof/src/protocols/zero.rs
+367	0	mat/src/utils/matop.rs
+1	0	mat/src/utils/mod.rs
+1	1	mat/src/utils/sparse.rs
+20	22	atomic_proof/src/protocols/litebullet.rs
+358	240	atomic_proof/src/protocols/mul.rs
+173	71	atomic_proof/src/protocols/litebullet.rs
+4	4	fsproof/src/batch_r1cs.rs
+5	5	fsproof/src/fs_trans.rs
+13	13	fsproof/src/helper_trans.rs
+1	5	atomic_proof/Cargo.toml
+645	645	atomic_proof/src/atomic_pop.rs
+581	365	atomic_proof/src/protocols/litebullet.rs
+1	5	dag/Cargo.toml
+1	5	fsproof/Cargo.toml
+2	2	fsproof/src/fs_trans.rs
+7	3	fsproof/src/helper_trans.rs
+37	37	Cargo.lock
+1	1	Cargo.toml
+1	1	atomic_proof/Cargo.toml
+74	53	atomic_proof/src/atomic_pop.rs
+16	10	atomic_proof/src/atomic_protocol.rs
+4	1	atomic_proof/src/lib.rs
+1884	404	atomic_proof/src/protocols/litebullet.rs
+5	0	atomic_proof/src/protocols/mod.rs
+2	2	dag/Cargo.toml
+1	1	fsproof/Cargo.toml
+1	1	fsproof/src/batch_r1cs.rs
+1	1	fsproof/src/poseidon.rs
+1	5	{evalyn => mat}/Cargo.toml
+3	3	{evalyn => mat}/benches/experiment.rs
+0	0	{evalyn => mat}/lookups_n.log
+0	0	{evalyn => mat}/lookups_num.log
+0	0	{evalyn => mat}/muls_n.log
+0	0	{evalyn => mat}/muls_num.log
+0	0	{evalyn => mat}/src/data_structures.rs
+0	0	{evalyn => mat}/src/hdr1cs/lookups.rs
+0	0	{evalyn => mat}/src/hdr1cs/mod.rs
+0	0	{evalyn => mat}/src/hdr1cs/muls.rs
+0	0	{evalyn => mat}/src/lib.rs
+0	0	{evalyn => mat}/src/protocols/batchpcs.rs
+0	0	{evalyn => mat}/src/protocols/boolcheck.rs
+0	0	{evalyn => mat}/src/protocols/clamp.rs
+0	0	{evalyn => mat}/src/protocols/diagonal.rs
+0	0	{evalyn => mat}/src/protocols/grand_product.rs
+0	0	{evalyn => mat}/src/protocols/hadamard.rs
+0	0	{evalyn => mat}/src/protocols/kronecker.rs
+0	0	{evalyn => mat}/src/protocols/linearcomb.rs
+0	0	{evalyn => mat}/src/protocols/litebullet.rs
+0	0	{evalyn => mat}/src/protocols/mod.rs
+0	0	{evalyn => mat}/src/protocols/mul.rs
+0	0	{evalyn => mat}/src/protocols/proj.rs
+0	0	{evalyn => mat}/src/protocols/rotationproj.rs
+0	0	{evalyn => mat}/src/protocols/scalars.rs
+0	0	{evalyn => mat}/src/protocols/splitbool.rs
+0	0	{evalyn => mat}/src/utils/fiat_shamir.rs
+0	0	{evalyn => mat}/src/utils/linear.rs
+0	0	{evalyn => mat}/src/utils/mockmat.rs
+0	0	{evalyn => mat}/src/utils/mod.rs
+0	0	{evalyn => mat}/src/utils/sparse.rs
+0	0	{evalyn => mat}/src/utils/xi.rs
+0	0	{evalyn => mat}/src/utils/zktr.rs
+1	0	Cargo.lock
+1	0	atomic_proof/Cargo.toml
+0	0	atomic_proof/src/atomic.rs
+624	0	atomic_proof/src/atomic_pop.rs
+32	0	atomic_proof/src/atomic_protocol.rs
+3	2	atomic_proof/src/lib.rs
+882	1187	atomic_proof/src/pop/arithmetic_expression.rs
+0	23	atomic_proof/src/pop/atomic_pop.rs
+696	490	atomic_proof/src/pop/groth16.rs
+2	11	atomic_proof/src/pop/mod.rs
+1	1	atomic_proof/src/protocols/litebullet.rs
+1	1	fsproof/src/batch_r1cs.rs
+142	459	fsproof/src/fs_trans.rs
+401	0	fsproof/src/helper_trans.rs
+3	0	fsproof/src/lib.rs
+481	525	atomic_proof/src/pop/groth16.rs
+4	9	atomic_proof/src/lib.rs
+1502	0	atomic_proof/src/pop/arithmetic_expression.rs
+23	0	atomic_proof/src/pop/atomic_pop.rs
+0	0	atomic_proof/src/{ => pop}/groth16.rs
+15	0	atomic_proof/src/pop/mod.rs
+46	0	Cargo.lock
+2	0	Cargo.toml
+1	0	atomic_proof/Cargo.toml
+629	0	atomic_proof/src/groth16.rs
+5	0	atomic_proof/{ => src}/lib.rs
+39	0	dag/Cargo.toml
+39	0	dag/cargo.toml
+0	0	dag/src/evalyn.rs
+0	0	dag/src/lib.rs
+0	1	Cargo.lock
+38	0	atomic_proof/Cargo.toml
+0	0	{atomic => atomic_proof}/lib.rs
+0	0	atomic/Cargo.toml => atomic_proof/src/atomic.rs
+0	0	atomic_proof/src/groth16.rs
+0	0	atomic_proof/src/protocols/concat.rs
+551	0	atomic_proof/src/protocols/hadamard.rs
+532	0	atomic_proof/src/protocols/litebullet.rs
+0	0	atomic_proof/src/protocols/mod.rs
+286	0	atomic_proof/src/protocols/mul.rs
+0	0	atomic_proof/src/util.rs
+0	0	dag/cargo.toml
+0	349	evalyn/src/poseidon/poseidon_demo.rs
+90	4	evalyn/src/utils/sparse.rs
+0	154	evalyn/src/zk_gadgets_example.rs
+1	10	fsproof/Cargo.toml
+425	0	fsproof/src/batch_r1cs.rs
+95	8	fsproof/src/fs_trans.rs
+4	4	fsproof/src/poseidon.rs
+7	0	Cargo.lock
+3	1	fsproof/Cargo.toml
+416	122	fsproof/src/fs_trans.rs
+2	0	.cargo/config.toml
+23	0	Cargo.lock
+5	1	Cargo.toml
+2	1	evalyn/Cargo.toml
+358	1	evalyn/src/utils/sparse.rs
+44	0	fsproof/Cargo.toml
+0	7	fsproof/lib.rs
+0	0	fsproof/src/{constraint.rs => batch_r1cs.rs}
+524	0	fsproof/src/fs_trans.rs
+11	0	fsproof/src/lib.rs
+642	0	fsproof/src/poseidon.rs
+2	0	poly-commit/src/smart_pc/utils.rs
+0	0	fsproof/src/constraint.rs
+0	0	fsproof/src/fs_trans.rs
+0	0	fsproof/src/poseidon.rs
+2	5	evalyn/src/protocols/grand_product.rs
+2	2	evalyn/src/utils/sparse.rs
+6	6	poly-commit/src/hyrax/tests.rs
+3	3	poly-commit/src/ipa_pc/mod.rs
+1	1	poly-commit/src/kzg10/mod.rs
+1	1	poly-commit/src/lib.rs
+3	3	poly-commit/src/linear_codes/multilinear_brakedown/tests.rs
+3	3	poly-commit/src/linear_codes/multilinear_ligero/tests.rs
+3	3	poly-commit/src/linear_codes/univariate_ligero/tests.rs
+1	1	poly-commit/src/linear_codes/utils.rs
+2	2	poly-commit/src/sonic_pc/data_structures.rs
+124	95	evalyn/src/poseidon/poseidon_demo.rs
+38	16	evalyn/src/poseidon/poseidon_demo.rs
+61	1	poly-commit/src/smart_pc/mod.rs
+194	53	poly-commit/src/smart_pc/utils.rs
+587	117	Cargo.lock
+7	18	Cargo.toml
+0	0	atomic/Cargo.toml
+7	0	atomic/lib.rs
+26	20	evalyn/Cargo.toml
+4	5	evalyn/benches/experiment.rs
+298	0	evalyn/src/poseidon/poseidon_demo.rs
+10	12	evalyn/src/protocols/grand_product.rs
+4	4	evalyn/src/utils/linear.rs
+2	2	evalyn/src/utils/sparse.rs
+154	0	evalyn/src/zk_gadgets_example.rs
+0	0	fsproof/Cargo.toml
+7	0	fsproof/lib.rs
+96	0	poly-commit/Cargo.toml
+32	0	poly-commit/bench-templates/Cargo.toml
+426	0	poly-commit/bench-templates/src/lib.rs
+115	0	poly-commit/experiment.log
+234	0	poly-commit/src/constraints.rs
+385	0	poly-commit/src/data_structures.rs
+256	0	poly-commit/src/error.rs
+0	0	poly-commit/src/hybrid/data_structures.rs
+0	0	poly-commit/src/hybrid/mod.rs
+129	0	poly-commit/src/hyrax/data_structures.rs
+512	0	poly-commit/src/hyrax/mod.rs
+211	0	poly-commit/src/hyrax/tests.rs
+39	0	poly-commit/src/hyrax/utils.rs
+237	0	poly-commit/src/ipa_pc/data_structures.rs
+1242	0	poly-commit/src/ipa_pc/mod.rs
+495	0	poly-commit/src/kzg10/data_structures.rs
+742	0	poly-commit/src/kzg10/mod.rs
+1424	0	poly-commit/src/lib.rs
+361	0	poly-commit/src/linear_codes/brakedown.rs
+175	0	poly-commit/src/linear_codes/data_structures.rs
+152	0	poly-commit/src/linear_codes/ligero.rs
+566	0	poly-commit/src/linear_codes/mod.rs
+125	0	poly-commit/src/linear_codes/multilinear_brakedown/mod.rs
+263	0	poly-commit/src/linear_codes/multilinear_brakedown/tests.rs
+87	0	poly-commit/src/linear_codes/multilinear_ligero/mod.rs
+256	0	poly-commit/src/linear_codes/multilinear_ligero/tests.rs
+90	0	poly-commit/src/linear_codes/univariate_ligero/mod.rs
+368	0	poly-commit/src/linear_codes/univariate_ligero/tests.rs
+360	0	poly-commit/src/linear_codes/utils.rs
+389	0	poly-commit/src/marlin/marlin_pc/data_structures.rs
+815	0	poly-commit/src/marlin/marlin_pc/mod.rs
+138	0	poly-commit/src/marlin/marlin_pst13_pc/combinations.rs
+465	0	poly-commit/src/marlin/marlin_pst13_pc/data_structures.rs
+844	0	poly-commit/src/marlin/marlin_pst13_pc/mod.rs
+409	0	poly-commit/src/marlin/mod.rs
+71	0	poly-commit/src/multilinear_pc/data_structures.rs
+314	0	poly-commit/src/multilinear_pc/mod.rs
+50	0	poly-commit/src/optional_rng.rs
+298	0	poly-commit/src/smart_pc/data_structures.rs
+53	0	poly-commit/src/smart_pc/fiat_shamir.rs
+917	0	poly-commit/src/smart_pc/mod.rs
+263	0	poly-commit/src/smart_pc/sub_protocols.rs
+517	0	poly-commit/src/smart_pc/utils.rs
+307	0	poly-commit/src/smart_pc/xi.rs
+291	0	poly-commit/src/sonic_pc/data_structures.rs
+928	0	poly-commit/src/sonic_pc/mod.rs
+286	0	poly-commit/src/streaming_kzg/data_structures.rs
+311	0	poly-commit/src/streaming_kzg/mod.rs
+296	0	poly-commit/src/streaming_kzg/space.rs
+258	0	poly-commit/src/streaming_kzg/tests.rs
+153	0	poly-commit/src/streaming_kzg/time.rs
+287	0	poly-commit/src/utils.rs
+-	-	python/fig1.png
+0	11	python/lookup_n_fixed.csv
+0	11	python/lookup_num_fixed.csv
+0	11	python/muls_n_fixed.csv
+0	11	python/muls_num_fixed.csv
+0	305	python/plot.py
+2	0	.gitignore
+0	176	0-macro.tex
+0	36	0-package.tex
+0	1	1-intro.tex
+970	0	Cargo.lock
+42	0	Cargo.toml
+0	19	alg-equivalence.tex
+0	21	alg-generalop.tex
+0	44	alg-litebullet.tex
+0	42	alg-traverse.tex
+0	62	alg-zktransform.tex
+0	442	appx-preliminary.tex
+0	564	appx-recap.tex
+0	369	appx-security_proof.tex
+0	114	appx-zkml.tex
+-	-	commit.pdf
+-	-	enc.pdf
+66	0	evalyn/Cargo.toml
+238	0	evalyn/benches/experiment.rs
+847	0	evalyn/lookups_n.log
+1020	0	evalyn/lookups_num.log
+956	0	evalyn/muls_n.log
+1114	0	evalyn/muls_num.log
+109	0	evalyn/src/data_structures.rs
+1445	0	evalyn/src/hdr1cs/lookups.rs
+2	0	evalyn/src/hdr1cs/mod.rs
+1590	0	evalyn/src/hdr1cs/muls.rs
+13	0	evalyn/src/lib.rs
+2276	0	evalyn/src/protocols/batchpcs.rs
+341	0	evalyn/src/protocols/boolcheck.rs
+650	0	evalyn/src/protocols/clamp.rs
+247	0	evalyn/src/protocols/diagonal.rs
+514	0	evalyn/src/protocols/grand_product.rs
+551	0	evalyn/src/protocols/hadamard.rs
+327	0	evalyn/src/protocols/kronecker.rs
+552	0	evalyn/src/protocols/linearcomb.rs
+532	0	evalyn/src/protocols/litebullet.rs
+14	0	evalyn/src/protocols/mod.rs
+286	0	evalyn/src/protocols/mul.rs
+1250	0	evalyn/src/protocols/proj.rs
+498	0	evalyn/src/protocols/rotationproj.rs
+547	0	evalyn/src/protocols/scalars.rs
+562	0	evalyn/src/protocols/splitbool.rs
+65	0	evalyn/src/utils/fiat_shamir.rs
+700	0	evalyn/src/utils/linear.rs
+1120	0	evalyn/src/utils/mockmat.rs
+6	0	evalyn/src/utils/mod.rs
+2136	0	evalyn/src/utils/sparse.rs
+53	0	evalyn/src/utils/xi.rs
+327	0	evalyn/src/utils/zktr.rs
+0	1218	llncs.cls
+0	1752	main.tex
+-	-	partial.pdf
+10	0	print.sh
+-	-	python/fig1.png
+11	0	python/lookup_n_fixed.csv
+11	0	python/lookup_num_fixed.csv
+11	0	python/muls_n_fixed.csv
+11	0	python/muls_num_fixed.csv
+305	0	python/plot.py
+-	-	r1cs.pdf
+0	19	readme.txt
+0	775	ref-old.bib
+0	1727	ref.bib
+0	1548	splncs04.bst
+0	29	table-atten.tex
+0	86	table-comp.tex
+0	31	table-ipa.tex
+0	109	table-pcs.tex
+0	29	table-r1cs.tex
+-	-	type2.pdf
+210	0	working_tree.txt
+176	0	0-macro.tex
+36	0	0-package.tex
+1	0	1-intro.tex
+19	0	alg-equivalence.tex
+21	0	alg-generalop.tex
+44	0	alg-litebullet.tex
+42	0	alg-traverse.tex
+62	0	alg-zktransform.tex
+442	0	appx-preliminary.tex
+564	0	appx-recap.tex
+369	0	appx-security_proof.tex
+114	0	appx-zkml.tex
+-	-	commit.pdf
+-	-	enc.pdf
+1218	0	llncs.cls
+1752	0	main.tex
+-	-	partial.pdf
+-	-	r1cs.pdf
+19	0	readme.txt
+775	0	ref-old.bib
+1727	0	ref.bib
+1548	0	splncs04.bst
+29	0	table-atten.tex
+86	0	table-comp.tex
+31	0	table-ipa.tex
+109	0	table-pcs.tex
+29	0	table-r1cs.tex
+-	-	type2.pdf
