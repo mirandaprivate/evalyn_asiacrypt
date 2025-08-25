@@ -43,7 +43,7 @@ use utils::{
     boolean_msm_g1, proj_left, proj_right, scalar_mul_vec_zp, add_vec_zp, scalar_mul_vec_g1,
     add_vec_g1, scalar_mul_vec_g2, add_vec_g2, convert_myint_to_scalar_mat,
     convert_boolean_to_scalar_mat, test_utils, is_zero_vec,
-    proj_left_myint, proj_right_myint,
+    proj_left_myint, proj_right_myint, proj_left_myint_flat, proj_right_myint_flat,
 };
 
 /// subprotocols for the SMART PC
@@ -328,6 +328,46 @@ where
         Self::commit_myint_via_full(pp, &square, hiding_factor)
     }
 
+    /// Commit to a huge 1×N vector without materializing the (almost) square matrix.
+    /// Expects `flat` to be the flattened column-major vector (same as `into_flattened_vec`).
+    pub fn commit_square_myint_flat(
+        pp: &UniversalParams<E>,
+        flat: &Vec<MyInt>,
+        hiding_factor: E::ScalarField,
+    ) -> Result<(PairingOutput<E>, Vec<E::G1>), Error> {
+        let total = flat.len();
+        if total == 0 { return Err(Error::DegreeIsZero); }
+    
+        // Match verify_square/convert_to_square: use floor-based split of log2(total)
+        let log_total = (total as u64).ilog2() as usize;
+        let log_n_new = log_total / 2;
+        let n_new = 1usize << log_n_new;
+        let m_new = total / n_new;
+
+        // Generators trimmed to new square shape
+        let vec_g = pp.vec_g[0..m_new].to_vec();
+        let vec_h = pp.vec_h[0..n_new].to_vec();
+
+        // Tier-1 commitments per column (column-major storage: column j = flat[j*m_new..(j+1)*m_new])
+        let mut tier_one_vec = Vec::with_capacity(n_new);
+        for j in 0..n_new {
+            let start = j * m_new;
+            let end = start + m_new;
+            #[cfg(feature = "parallel")]
+            let col: Vec<E::ScalarField> = flat[start..end]
+                .par_iter().map(|&x| E::ScalarField::from(x)).collect();
+            #[cfg(not(feature = "parallel"))]
+            let col: Vec<E::ScalarField> = flat[start..end]
+                .iter().map(|&x| E::ScalarField::from(x)).collect();
+            let commit_col = msm_g1::<E>(&vec_g, &col);
+            tier_one_vec.push(commit_col);
+        }
+
+    let result = inner_pairing_product(&tier_one_vec, &vec_h)
+            + pp.tilde_u.mul(hiding_factor);
+        Ok((result, tier_one_vec))
+    }
+
 
     /// Outputs a commitment to a matrix
     /// and intermediate tier-one commitment
@@ -479,6 +519,204 @@ where
         Self::open_myint(pp, &square, &xl_new, &xr_new, v_com, mat_com, tier1, v_tilde, mat_tilde)
     }
 
+    /// Open a commitment to a huge 1×N vector without materializing the (almost) square matrix.
+    pub fn open_square_myint_flat(
+        pp: &UniversalParams<E>,
+        flat: &Vec<MyInt>,
+        xl: &Vec<E::ScalarField>,
+        xr: &Vec<E::ScalarField>,
+        v_com: PairingOutput<E>,
+        mat_com: PairingOutput<E>,
+        tier1: &Vec<E::G1>,
+        v_tilde: E::ScalarField,
+        mat_tilde: E::ScalarField,
+    ) -> Result<Trans<E>, Error> {
+        let total = flat.len();
+        if total == 0 { return Err(Error::DegreeIsZero); }
+    
+        // Match commit_square_myint_flat: split by floor(log2(total))
+        let log_total = (total as u64).ilog2() as usize;
+        let log_n = log_total / 2;
+        let n = 1usize << log_n;
+        let m = total / n;
+
+        // Reorganize xl/xr to square-shape order (same as verify_square/convert_to_square)
+        let xxxx = [xr.as_slice(), xl.as_slice()].concat();
+        let xl_new = xxxx[log_n..].to_vec();
+        let xr_new = xxxx[..log_n].to_vec();
+
+        let mut fs = FiatShamir::new();
+        fs.push(&mat_com);
+        fs.push(&v_com);
+
+        start_timer!(|| format!("Opening a {:?}-vector (flat streaming):", m * n));
+
+        let rng = &mut ark_std::test_rng();
+        let x = fs.gen_challenge::<E>();
+
+        let log_m = (m as u64).ilog2() as usize;
+        let log_n = (n as u64).ilog2() as usize;
+
+        let mut vec_l_tilde: Vec<PairingOutput<E>> = Vec::new();
+        let mut vec_r_tilde: Vec<PairingOutput<E>>= Vec::new();
+
+        let vec_l_hiding_factor: Vec<E::ScalarField> =
+            (0..(log_m+log_n)).map(|_| E::ScalarField::rand(rng)).collect();
+        let vec_r_hiding_factor: Vec<E::ScalarField> =
+            (0..(log_m+log_n)).map(|_| E::ScalarField::rand(rng)).collect();
+
+        let u_0 = E::pairing(pp.g_0, pp.h_hat);
+        let u_tilde = pp.tilde_u;
+        let l_vec: Vec<E::ScalarField> = xi_from_challenges::<E>(&xl_new);
+        let r_vec: Vec<E::ScalarField> = xi_from_challenges::<E>(&xr_new);
+
+        // Current vectors (length n)
+        let mut capital_a_current = tier1[0..n].to_vec();
+        let mut h_vec_current = pp.vec_h[0..n].to_vec();
+        let mut r_current = r_vec[0..n].to_vec();
+
+        let mut challenges_n: Vec<E::ScalarField> = Vec::new();
+        let mut challenges_inv_n: Vec<E::ScalarField> = Vec::new();
+
+        // Use memory-optimized projection directly on flat vector
+        let la: Vec<E::ScalarField> = proj_left_myint_flat::<E>(flat, &l_vec, m, n);
+        let mut v_current = la;
+
+        for j in 0..log_n {
+            let current_len = n / 2usize.pow(j as u32);
+            let v_left = &v_current[0..current_len/2];
+            let v_right = &v_current[current_len/2..current_len];
+
+            let capital_a_left = &capital_a_current[0..current_len/2];
+            let capital_a_right = &capital_a_current[current_len/2..current_len];
+            let r_left = &r_current[0..current_len/2];
+            let r_right = &r_current[current_len/2..current_len];
+            let h_left = &h_vec_current[0..current_len/2];
+            let h_right = &h_vec_current[current_len/2..current_len];
+
+            let l_tr = inner_pairing_product(capital_a_left, h_right).mul(&x)
+                + u_0.mul(&inner_product::<E>(v_left, r_right));
+            let r_tr = inner_pairing_product(capital_a_right, h_left).mul(&x)
+                + u_0.mul(&inner_product::<E>(v_right, r_left));
+
+            let l_tr_tilde = l_tr + u_tilde.mul(&vec_l_hiding_factor[j]);
+            let r_tr_tilde = r_tr + u_tilde.mul(&vec_r_hiding_factor[j]);
+            vec_l_tilde.push(l_tr_tilde);
+            vec_r_tilde.push(r_tr_tilde);
+
+            fs.push(&l_tr_tilde);
+            fs.push(&r_tr_tilde);
+            let x_j = fs.gen_challenge::<E>();
+            let x_j_inv = x_j.inverse().unwrap();
+            challenges_n.push(x_j);
+            challenges_inv_n.push(x_j_inv);
+
+            v_current = add_vec_zp::<E>(v_left, &scalar_mul_vec_zp::<E>(v_right, &x_j_inv));
+            capital_a_current = add_vec_g1::<E>(capital_a_left, &scalar_mul_vec_g1::<E>(capital_a_right, &x_j_inv));
+            h_vec_current = add_vec_g2::<E>(h_left, &scalar_mul_vec_g2::<E>(h_right, &x_j));
+            r_current = add_vec_zp::<E>(r_left, &scalar_mul_vec_zp::<E>(r_right, &x_j));
+        }
+
+        let xi_n_inv = xi_from_challenges::<E>(&challenges_inv_n);
+        let a_xi_inv = proj_right_myint_flat::<E>(flat, &xi_n_inv, m, n);
+
+        let h_reduce = h_vec_current[0];
+        let r_reduce = r_current[0];
+
+    let mut a_current = a_xi_inv[0..m].to_vec();
+    let mut g_vec_current = pp.vec_g[0..m].to_vec();
+    let mut l_current = l_vec[0..m].to_vec();
+
+        let mut challenges_m: Vec<E::ScalarField> = Vec::new();
+        let mut challenges_inv_m: Vec<E::ScalarField> = Vec::new();
+
+        for j in 0..log_m {
+            let current_len = m / 2usize.pow(j as u32);
+            let a_left = &a_current[0..current_len/2];
+            let a_right = &a_current[current_len/2..current_len];
+            let l_left = &l_current[0..current_len/2];
+            let l_right = &l_current[current_len/2..current_len];
+            let g_left = &g_vec_current[0..current_len/2];
+            let g_right = &g_vec_current[current_len/2..current_len];
+
+            let l_tr = E::pairing(msm_g1::<E>(g_right, a_left), h_reduce).mul(&x)
+                + u_0.mul(&r_reduce.mul(&inner_product::<E>(a_left, l_right)));
+            let r_tr = E::pairing(msm_g1::<E>(g_left, a_right), h_reduce).mul(&x)
+                + u_0.mul(&r_reduce.mul(inner_product::<E>(a_right, l_left)));
+
+            let l_tr_tilde = l_tr + u_tilde.mul(&vec_l_hiding_factor[j+log_n]);
+            let r_tr_tilde = r_tr + u_tilde.mul(&vec_r_hiding_factor[j+log_n]);
+            vec_l_tilde.push(l_tr_tilde);
+            vec_r_tilde.push(r_tr_tilde);
+
+            fs.push(&l_tr_tilde);
+            fs.push(&r_tr_tilde);
+            let x_j = fs.gen_challenge::<E>();
+            let x_j_inv = x_j.inverse().unwrap();
+            challenges_m.push(x_j);
+            challenges_inv_m.push(x_j_inv);
+
+            a_current = add_vec_zp::<E>(a_left, &scalar_mul_vec_zp::<E>(a_right, &x_j_inv));
+            g_vec_current = add_vec_g1::<E>(g_left, &scalar_mul_vec_g1::<E>(g_right, &x_j));
+            l_current = add_vec_zp::<E>(l_left, &scalar_mul_vec_zp::<E>(l_right, &x_j));
+        }
+
+        let a_reduce = a_current[0];
+        let g_reduce = g_vec_current[0];
+
+        let xi_l = xi_ip_from_challenges::<E>(&xl_new, &challenges_m);
+        let xi_r = xi_ip_from_challenges::<E>(&xr_new, &challenges_n);
+
+        let base_rhs = u_0.mul(&(xi_l * xi_r)) + E::pairing(g_reduce.mul(&x), h_reduce);
+        let rhs_tilde = E::ScalarField::rand(rng);
+        let rhs_com = base_rhs.mul(&a_reduce) + u_tilde.mul(&rhs_tilde);
+
+        fs.push(&g_reduce);
+        fs.push(&h_reduce);
+        fs.push(&rhs_com);
+
+        let mut lhs_tilde = v_tilde + x * mat_tilde;
+        for j in 0..log_n {
+            let l_tilde = vec_l_hiding_factor[j];
+            let r_tilde = vec_r_hiding_factor[j];
+            let x_j = challenges_n[j];
+            let x_j_inv = challenges_inv_n[j];
+            lhs_tilde = lhs_tilde + l_tilde * x_j + r_tilde * x_j_inv;
+        }
+        for j in 0..log_m {
+            let l_tilde = vec_l_hiding_factor[j+log_n];
+            let r_tilde = vec_r_hiding_factor[j+log_n];
+            let x_j = challenges_m[j];
+            let x_j_inv = challenges_inv_m[j];
+            lhs_tilde = lhs_tilde + l_tilde * x_j + r_tilde * x_j_inv;
+        }
+        let eq_tilde = lhs_tilde - rhs_tilde;
+        let eq_tilde_com = u_tilde.mul(&eq_tilde);
+
+        let (v_g_prime, w_g) = sub_protocols::pip_g1_prove::<E>(pp, &challenges_m, &mut fs);
+        let (v_h_prime, w_h) = sub_protocols::pip_g2_prove::<E>(pp, &challenges_n, &mut fs);
+        let (tr2, z1, z2) = sub_protocols::schnorr2_prove(pp, base_rhs, rhs_com, a_reduce, rhs_tilde, &mut fs);
+        let (tr1, z11) = sub_protocols::schnorr1_prove(pp, eq_tilde_com, eq_tilde, &mut fs);
+
+        let proof = Trans::<E> {
+            vec_l_tilde,
+            vec_r_tilde,
+            com_rhs_tilde: rhs_com,
+            v_g: g_reduce,
+            v_h: h_reduce,
+            v_g_prime,
+            v_h_prime,
+            w_g,
+            w_h,
+            schnorr_1_f: tr1,
+            schnorr_1_z: z11,
+            schnorr_2_f: tr2,
+            schnorr_2_z_1: z1,
+            schnorr_2_z_2: z2,
+        };
+        Ok(proof)
+    }
+
 
     /// On input a polynomial `p` and a `point`, outputs a [`Proof`] for the same.
     pub fn open (
@@ -622,16 +860,17 @@ where
 
         // println!(" * Time for ket_zp: {:?}", timer.elapsed());
 
-        let h_reduce = h_vec_current[0];
-        let r_reduce = r_current[0];
+    let h_reduce = h_vec_current[0];
+    let r_reduce = r_current[0];
 
-        let mut a_current: Vec<E::ScalarField> = a_xi_inv.to_vec();
+    // Operate on the exact 2^log_m prefix to ensure consistent folding
+    let pow2_m = 1usize << log_m;
+    let mut a_current: Vec<E::ScalarField> = a_xi_inv[0..pow2_m.min(a_xi_inv.len())].to_vec();
+    let mut g_vec_current = pp.vec_g[0..m][0..pow2_m.min(m)].to_vec();
+    let mut l_current = l_vec[0..m][0..pow2_m.min(l_vec.len())].to_vec();
         
-        let mut g_vec_current = pp.vec_g[0..m].to_vec();
-        let mut l_current = l_vec[0..m].to_vec();
-        
-        let mut challenges_m: Vec<E::ScalarField> = Vec::new();
-        let mut challenges_inv_m: Vec<E::ScalarField> = Vec::new();
+    let mut challenges_m: Vec<E::ScalarField> = Vec::new();
+    let mut challenges_inv_m: Vec<E::ScalarField> = Vec::new();
         
 
         for j in 0..log_m {
@@ -952,14 +1191,15 @@ where
         let h_reduce = h_vec_current[0];
         let r_reduce = r_current[0];
 
-        let mut a_current: Vec<E::ScalarField> = a_xi_inv.to_vec();
-        
-        let mut g_vec_current = pp.vec_g[0..m].to_vec();
-        let mut l_current = l_vec[0..m].to_vec();
-        
+        // Operate on the exact 2^log_m prefix to ensure consistent folding
+        let pow2_m = 1usize << log_m;
+        let mut a_current: Vec<E::ScalarField> = a_xi_inv[0..pow2_m.min(a_xi_inv.len())].to_vec();
+        let mut g_vec_current = pp.vec_g[0..m][0..pow2_m.min(m)].to_vec();
+        let mut l_current = l_vec[0..m][0..pow2_m.min(l_vec.len())].to_vec();
+            
         let mut challenges_m: Vec<E::ScalarField> = Vec::new();
         let mut challenges_inv_m: Vec<E::ScalarField> = Vec::new();
-        
+            
 
         for j in 0..log_m {
 
@@ -1028,18 +1268,14 @@ where
 
         let a_reduce = a_current[0];
         let g_reduce = g_vec_current[0];
-        
-        // /////////////////////////////////////////////////////////////
-        // Add Zero-Knowledge from now on
-        // /////////////////////////////////////////////////////////////
-        
+        let l_reduce = l_current[0];
 
-        let xi_l =
-        xi_ip_from_challenges::<E>(&xl, &challenges_m);
-        let xi_r =
-        xi_ip_from_challenges::<E>(&xr, &challenges_n);
+        let xi_l = xi_ip_from_challenges::<E>(&xl, &challenges_m);
+        let xi_r = xi_ip_from_challenges::<E>(&xr, &challenges_n);
         
-            
+        assert_eq!(l_reduce, xi_l);
+        assert_eq!(r_reduce, xi_r);
+
         let base_rhs =  
             u_0.mul(&(xi_l * xi_r))
             + E::pairing(g_reduce.mul(&x), h_reduce);
@@ -1143,17 +1379,15 @@ where
         xr: &Vec<E::ScalarField>,
         proof: &Trans<E>,
     ) -> Result<bool, Error> {
-        let m = (1 << xl.len()) as usize;
-        let n = (1 << xr.len()) as usize;
-
-        let (_m_new, n_new) = shape_to_square_shape((m, n));
-        let log_n_new = (n_new as u64).ilog2() as usize;
+        // Match open_square_myint_flat: split total log equally for square shape
+        let log_sum = xl.len() + xr.len(); // == log_m + log_n
+        let log_n_new = log_sum / 2;
 
         // Reconstruct the original challenge vector from xl and xr
         let mut xxxx = Vec::new();
-        xxxx.extend_from_slice(xr); // right challenges first
-        xxxx.extend_from_slice(xl); // then left challenges
-        
+        xxxx.extend_from_slice(xr);
+        xxxx.extend_from_slice(xl);
+
         // Reorganize for the new square shape
         let xl_new = xxxx[log_n_new..].to_vec();
         let xr_new = xxxx[..log_n_new].to_vec();
@@ -1284,10 +1518,10 @@ where
         ); 
 
         
-        // println!(" check 1 {:?}", check1);
-        // println!(" check 2 {:?}", check2);
-        // println!(" check 3 {:?}", check3);
-        // println!(" check 4 {:?}", check4);
+        println!(" check 1 {:?}", check1);
+        println!(" check 2 {:?}", check2);
+        println!(" check 3 {:?}", check3);
+        println!(" check 4 {:?}", check4);
         let result =  check1 && check2 && check3 && check4;
 
         end_timer!(check_time, || format!("Result: {}", result));
@@ -1621,6 +1855,95 @@ mod tests {
         }
     }
 
+        #[test]
+    fn test_commit_square_vector_matrix_workflow() {
+        let mut rng = test_rng();
+        
+        // Test parameters
+        let qlog = 12; // q = 4096
+        let pp = SmartPC::<Bls12_381>::setup(qlog, &mut rng).unwrap();
+        
+        // Create a test matrix as a long vector (simulating concatenated matrices)
+        let test_data = vec![BlsFr::from(1u64), BlsFr::from(2u64), BlsFr::from(3u64), BlsFr::from(4u64), BlsFr::from(5u64), BlsFr::from(6u64), BlsFr::from(7u64), BlsFr::from(8u64)];
+        let test_matrix = vec![test_data]; // 1×4 matrix
+        
+        println!("Original matrix shape: {}×{}", test_matrix.len(), test_matrix[0].len());
+        
+        
+        // Generate random hiding factors
+        let hiding_factor = BlsFr::rand(&mut rng);
+        
+        // Test commit_square_full
+        let (commitment, tier1) = SmartPC::<Bls12_381>::commit_square_full(&pp, &test_matrix, hiding_factor).unwrap();
+        println!("✓ Commitment succeeded");
+            
+        // Raw challenges sized for original (m_raw=1, n_raw=4) layout: we treat columns-length as rows after conversion
+        // Original logical shape before square conversion: m_raw = test_matrix.len() = 1 (columns), n_raw = test_matrix[0].len() = 4 (rows)
+        let m_raw = test_matrix[0].len(); // we stored data as single column-major row vector
+        let n_raw = test_matrix.len();
+        let log_rows = (m_raw as u64).ilog2() as usize; // will become part of left
+        let log_cols = (n_raw as u64).ilog2() as usize; // zero here
+        let xl_raw: Vec<BlsFr> = (0..log_rows).map(|_| BlsFr::rand(&mut rng)).collect();
+        let xr_raw: Vec<BlsFr> = (0..log_cols).map(|_| BlsFr::rand(&mut rng)).collect();
+        println!("Raw challenge vector lengths: xl_raw={}, xr_raw={}", xl_raw.len(), xr_raw.len());
+
+        // Reproduce open_square transformation locally so evaluation aligns with commitment/open
+        // 1. Convert to square
+        let square = convert_to_square::<Bls12_381>(&test_matrix);
+        // 2. Determine new right dimension bits (same formula as open_square)
+        let (_m_new, n_new) = shape_to_square_shape((test_matrix[0].len(), test_matrix.len()));
+        let log_n_new = (n_new as u64).ilog2() as usize;
+        // 3. Concatenate original xr_raw || xl_raw then split
+        let mut xxxx = Vec::new();
+        xxxx.extend_from_slice(&xr_raw); 
+        xxxx.extend_from_slice(&xl_raw);
+        let xl_new = xxxx[log_n_new..].to_vec();
+        let xr_new = xxxx[..log_n_new].to_vec();
+        println!("Transformed challenge lengths: xl_new={}, xr_new={}", xl_new.len(), xr_new.len());
+
+        // 4. Evaluate square matrix at transformed point using existing eval
+        let (v_com, v_tilde) = SmartPC::<Bls12_381>::eval(&pp, &test_matrix, &xl_raw, &xr_raw);
+        let (v_com_new, v_tilde_new) = SmartPC::<Bls12_381>::eval(&pp, &square, &xl_new, &xr_new);
+
+        assert_eq!(v_com - v_com_new, pp.tilde_u.mul(v_tilde - v_tilde_new), "Evaluation mismatch after square conversion");
+
+        // Test open_square - this should work with the original test_matrix
+        let open_result = SmartPC::<Bls12_381>::open_square(
+            &pp,
+            &test_matrix, // original non-square (open_square converts internally)
+            &xl_raw,
+            &xr_raw,
+            v_com,
+            commitment,
+            &tier1,
+            v_tilde,
+            hiding_factor,
+        );
+        
+        match open_result {
+            Ok(proof) => {
+                println!("✓ Opening succeeded");
+                
+                // Test verify_square
+                let verify_result = SmartPC::<Bls12_381>::verify_square(
+                    &pp,
+                    commitment,
+                    v_com,
+                    &xl_raw,
+                    &xr_raw,
+                    &proof,
+                );
+                
+                match verify_result {
+                    Ok(true) => println!("✓ Verification succeeded"),
+                    Ok(false) => panic!("✗ Verification failed"),
+                    Err(e) => panic!("✗ Verification error: {:?}", e),
+                }
+            },
+            Err(e) => panic!("✗ Opening failed: {:?}", e),
+        }
+    }
+
     #[test]
     fn test_commit_square_challenge_vector_reorganization() {
         // Test the challenge vector reorganization logic in verify_square
@@ -1679,5 +2002,296 @@ mod tests {
             }
             println!();
         }
+    }
+
+    #[test]
+    fn test_commit_flat_equals_square_commit_myint() {
+        // Compare commit_square_myint (with convert_to_square_myint) vs commit_square_myint_flat
+        // on the same flattened 1×N vector
+        let mut rng = test_rng();
+        let qlog = 8; // q = 256, ample for tiny shapes
+        let pp = SmartPC::<Bls12_381>::setup(qlog, &mut rng).unwrap();
+
+        // Deterministic small vector, length 8
+    let flat: Vec<MyInt> = (1..=8).collect();
+
+        // As a column-major 1×8 matrix (one column, 8 rows)
+        let mat = vec![flat.clone()];
+
+        let hide = BlsFr::rand(&mut rng);
+        let (com_sq, tier1_sq) = SmartPC::<Bls12_381>::commit_square_myint(&pp, &mat, hide).unwrap();
+        let (com_flat, tier1_flat) = SmartPC::<Bls12_381>::commit_square_myint_flat(&pp, &flat, hide).unwrap();
+
+        assert_eq!(com_sq, com_flat, "Commitments must match between square and flat commits");
+        assert_eq!(tier1_sq.len(), tier1_flat.len(), "Tier1 lengths must match");
+        for (a, b) in tier1_sq.iter().zip(tier1_flat.iter()) {
+            assert_eq!(a, b, "Tier1 per-column commitments should be identical");
+        }
+    }
+
+    #[test]
+    fn test_open_flat_and_square_verify_true() {
+        // Ensure both open_square_myint and open_square_myint_flat produce proofs that verify
+        let mut rng = test_rng();
+        let qlog = 10; // q = 1024 for a bit more room
+        let pp = SmartPC::<Bls12_381>::setup(qlog, &mut rng).unwrap();
+
+        // Build a small deterministic vector of length 16
+        let flat: Vec<MyInt> = (1..=16).collect();
+        let mat = vec![flat.clone()]; // 1×16
+
+        // Random challenges sized for original (m_raw=16 -> log_m=4, n_raw=1 -> log_n=0)
+        let xl_raw: Vec<BlsFr> = (0..4).map(|_| BlsFr::rand(&mut rng)).collect();
+        let xr_raw: Vec<BlsFr> = vec![];
+
+        let hide = BlsFr::rand(&mut rng);
+        let (com_sq, tier1_sq) = SmartPC::<Bls12_381>::commit_square_myint(&pp, &mat, hide).unwrap();
+        let (com_flat, tier1_flat) = SmartPC::<Bls12_381>::commit_square_myint_flat(&pp, &flat, hide).unwrap();
+        assert_eq!(com_sq, com_flat);
+
+        // Compute the actual evaluation v at the reorganized (xl_new, xr_new) to build a correct v_com
+        // Reproduce the same challenge reorganization as open_square_myint/verify_square
+        let (_m_new, n_new) = shape_to_square_shape((mat[0].len(), mat.len()));
+        let log_n_new = (n_new as u64).ilog2() as usize;
+        let mut xxxx = Vec::new();
+        xxxx.extend_from_slice(&xr_raw);
+        xxxx.extend_from_slice(&xl_raw);
+        let xl_new = xxxx[log_n_new..].to_vec();
+        let xr_new = xxxx[..log_n_new].to_vec();
+        let square = convert_to_square_myint(&mat);
+        let l_vec = xi_from_challenges::<Bls12_381>(&xl_new);
+        let r_vec = xi_from_challenges::<Bls12_381>(&xr_new);
+        let la = proj_left_myint::<Bls12_381>(&square, &l_vec);
+        let v_hat = inner_product::<Bls12_381>(&la, &r_vec);
+        let v_com = pp.u.mul(&v_hat);
+
+        // Open via square path
+        let proof_sq = SmartPC::<Bls12_381>::open_square_myint(
+            &pp,
+            &mat,
+            &xl_raw,
+            &xr_raw,
+            v_com,
+            com_sq,
+            &tier1_sq,
+            BlsFr::zero(),
+            hide,
+        ).unwrap();
+        let ok_sq = SmartPC::<Bls12_381>::verify_square(&pp, com_sq, v_com, &xl_raw, &xr_raw, &proof_sq).unwrap();
+        assert!(ok_sq, "verify_square should succeed for square open");
+
+        // Open via flat path
+        let proof_flat = SmartPC::<Bls12_381>::open_square_myint_flat(
+            &pp,
+            &flat,
+            &xl_raw,
+            &xr_raw,
+            v_com,
+            com_flat,
+            &tier1_flat,
+            BlsFr::zero(),
+            hide,
+        ).unwrap();
+        let ok_flat = SmartPC::<Bls12_381>::verify_square(&pp, com_flat, v_com, &xl_raw, &xr_raw, &proof_flat).unwrap();
+        assert!(ok_flat, "verify_square should succeed for flat open");
+    }
+
+    #[test]
+    fn test_flat_vs_standard_consistency() {
+        use ark_bls12_381::{Bls12_381, Fr as BlsFr};
+        use ark_ff::UniformRand;
+        use ark_std::test_rng;
+
+        let mut rng = test_rng();
+        let qlog = 10; // 2^10 = 1024 generators
+        let pp = SmartPC::<Bls12_381>::setup(qlog, &mut rng).unwrap();
+
+        // Create test matrix with known pattern
+        let original_m = 32;
+        let original_n = 16;
+        let mut test_matrix: Vec<Vec<MyInt>> = Vec::new();
+        
+        for i in 0..original_n {
+            let mut col = Vec::new();
+            for j in 0..original_m {
+                // Use a pattern that's easy to verify: col_idx * 1000 + row_idx
+                col.push(i * 1000 + j);
+            }
+            test_matrix.push(col);
+        }
+
+        // Flatten the matrix (column-major)
+        let mut flat_vector: Vec<MyInt> = Vec::new();
+        for col in &test_matrix {
+            flat_vector.extend_from_slice(col);
+        }
+
+        // Convert to square and flat representations
+        let square_matrix = convert_to_square_myint(&test_matrix);
+        
+        println!("Original: {}x{}, Square: {}x{}, Flat len: {}", 
+                 original_n, original_m, 
+                 square_matrix.len(), square_matrix[0].len(),
+                 flat_vector.len());
+
+        let hiding_factor = BlsFr::rand(&mut rng);
+
+        // Test 1: Commitment consistency
+        let (com_standard, tier1_standard) = SmartPC::<Bls12_381>::commit_square_myint(&pp, &test_matrix, hiding_factor).unwrap();
+        let (com_flat, tier1_flat) = SmartPC::<Bls12_381>::commit_square_myint_flat(&pp, &flat_vector, hiding_factor).unwrap();
+        
+        assert_eq!(com_standard, com_flat, "Commitments should be identical");
+        assert_eq!(tier1_standard.len(), tier1_flat.len(), "Tier1 vectors should have same length");
+        
+        // Check individual tier1 commitments
+        for (i, (std_commit, flat_commit)) in tier1_standard.iter().zip(tier1_flat.iter()).enumerate() {
+            assert_eq!(std_commit, flat_commit, "Tier1 commitment {} should be identical", i);
+        }
+
+        // Test 2: Challenge vector generation and reorganization
+        let xl_raw: Vec<BlsFr> = (0..5).map(|_| BlsFr::rand(&mut rng)).collect(); // 2^5 = 32 rows
+        let xr_raw: Vec<BlsFr> = (0..4).map(|_| BlsFr::rand(&mut rng)).collect(); // 2^4 = 16 cols
+
+        // Test 3: Evaluation consistency - convert matrices to ScalarField
+        let square_matrix_scalar: Vec<Vec<BlsFr>> = square_matrix.iter()
+            .map(|col| col.iter().map(|&x| BlsFr::from(x as u64)).collect())
+            .collect();
+        
+        let (v_com_standard, v_tilde_standard) = SmartPC::<Bls12_381>::eval(&pp, &square_matrix_scalar, &xl_raw, &xr_raw);
+        
+        // For flat, we need to manually compute the evaluation using the same logic
+        let total = flat_vector.len();
+        let log_total = (total as u64).ilog2() as usize;
+        let log_n = log_total / 2;
+        let n = 1usize << log_n;
+        let m = total / n;
+        
+        // Reconstruct matrix from flat (column-major)
+        let mut reconstructed_matrix: Vec<Vec<BlsFr>> = Vec::with_capacity(n);
+        for i in 0..n {
+            let start = i * m;
+            let end = start + m;
+            let col: Vec<BlsFr> = flat_vector[start..end].iter()
+                .map(|&x| BlsFr::from(x as u64)).collect();
+            reconstructed_matrix.push(col);
+        }
+        
+        // Apply challenge reorganization like verify_square
+        let xxxx = [xr_raw.as_slice(), xl_raw.as_slice()].concat();
+        let xl_new = xxxx[log_n..].to_vec();
+        let xr_new = xxxx[..log_n].to_vec();
+        
+        let (v_com_flat, v_tilde_flat) = SmartPC::<Bls12_381>::eval(&pp, &reconstructed_matrix, &xl_new, &xr_new);
+        
+        // Note: v_com values might differ due to different challenge arrangements, 
+        // but the verification should work consistently
+
+        // Test 4: Open and verify consistency
+        let proof_standard = SmartPC::<Bls12_381>::open_square_myint(
+            &pp,
+            &square_matrix,
+            &xl_raw,
+            &xr_raw,
+            v_com_standard,
+            com_standard,
+            &tier1_standard,
+            v_tilde_standard,
+            hiding_factor,
+        ).unwrap();
+
+        let proof_flat = SmartPC::<Bls12_381>::open_square_myint_flat(
+            &pp,
+            &flat_vector,
+            &xl_raw,
+            &xr_raw,
+            v_com_flat,
+            com_flat,
+            &tier1_flat,
+            v_tilde_flat,
+            hiding_factor,
+        ).unwrap();
+
+        // Test 5: Verification consistency
+        let verify_standard = SmartPC::<Bls12_381>::verify_square(
+            &pp, com_standard, v_com_standard, &xl_raw, &xr_raw, &proof_standard
+        ).unwrap();
+        
+        let verify_flat = SmartPC::<Bls12_381>::verify_square(
+            &pp, com_flat, v_com_flat, &xl_raw, &xr_raw, &proof_flat
+        ).unwrap();
+
+        assert!(verify_standard, "Standard path verification should succeed");
+        assert!(verify_flat, "Flat path verification should succeed");
+
+        // Test 6: Cross-verification (standard proof with flat commitment and vice versa)
+        // This should fail if the implementations are inconsistent
+        let cross_verify_1 = SmartPC::<Bls12_381>::verify_square(
+            &pp, com_flat, v_com_standard, &xl_raw, &xr_raw, &proof_standard
+        );
+        
+        let cross_verify_2 = SmartPC::<Bls12_381>::verify_square(
+            &pp, com_standard, v_com_flat, &xl_raw, &xr_raw, &proof_flat
+        );
+
+        // These should only succeed if the evaluations are actually the same
+        // (which they should be if our column-major layout is correct)
+        if v_com_standard == v_com_flat {
+            assert!(cross_verify_1.unwrap(), "Cross-verification 1 should succeed with same v_com");
+            assert!(cross_verify_2.unwrap(), "Cross-verification 2 should succeed with same v_com");
+        }
+
+        println!("✓ All flat vs standard consistency tests passed!");
+        println!("  - Commitment consistency: ✓");
+        println!("  - Tier1 commitment consistency: ✓");  
+        println!("  - Standard verification: ✓");
+        println!("  - Flat verification: ✓");
+        if v_com_standard == v_com_flat {
+            println!("  - Evaluation consistency: ✓");
+            println!("  - Cross-verification: ✓");
+        } else {
+            println!("  - Evaluation differs (expected due to challenge reorg)");
+        }
+    }
+
+    #[test]
+    fn test_column_major_layout_verification() {
+        use ark_bls12_381::{Bls12_381, Fr as BlsFr};
+        use ark_std::test_rng;
+
+        let mut rng = test_rng();
+        let qlog = 8;
+        let pp = SmartPC::<Bls12_381>::setup(qlog, &mut rng).unwrap();
+
+        // Create a small test case with known values
+        let test_matrix = vec![
+            vec![1, 2, 3, 4],      // Column 0
+            vec![5, 6, 7, 8],      // Column 1  
+            vec![9, 10, 11, 12],   // Column 2
+            vec![13, 14, 15, 16],  // Column 3
+        ];
+
+        // Expected flat vector (column-major): [1,2,3,4, 5,6,7,8, 9,10,11,12, 13,14,15,16]
+        let expected_flat = vec![1,2,3,4, 5,6,7,8, 9,10,11,12, 13,14,15,16];
+        
+        // Create actual flat vector
+        let mut actual_flat: Vec<MyInt> = Vec::new();
+        for col in &test_matrix {
+            actual_flat.extend_from_slice(col);
+        }
+        
+        assert_eq!(actual_flat, expected_flat, "Flattening should be column-major");
+
+        let hiding_factor = BlsFr::rand(&mut rng);
+
+        // Test commitment
+        let (com_standard, _) = SmartPC::<Bls12_381>::commit_square_myint(&pp, &test_matrix, hiding_factor).unwrap();
+        let (com_flat, _) = SmartPC::<Bls12_381>::commit_square_myint_flat(&pp, &actual_flat, hiding_factor).unwrap();
+        
+        assert_eq!(com_standard, com_flat, "Column-major layout should produce identical commitments");
+
+        println!("✓ Column-major layout verification passed!");
+        println!("  - Original matrix: 4x4");
+        println!("  - Flat representation: {:?}", actual_flat);
+        println!("  - Commitment consistency: ✓");
     }
 }

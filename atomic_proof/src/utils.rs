@@ -509,6 +509,12 @@ mod tests {
     use ark_bls12_381::Fr as BlsFr;
     use ark_ff::Zero;
     use mat::utils::linear::inner_product;
+    use mat::utils::xi::xi_from_challenges;
+    use ark_bls12_381::Bls12_381;
+    use ark_std::test_rng;
+    use ark_ff::UniformRand;
+    use ark_poly_commit::smart_pc::SmartPC;
+    use ark_poly_commit::smart_pc::data_structures::UniversalParams as PcsPP;
 
     #[test]
     fn test_flatconcat_container_area_ordering() {
@@ -559,6 +565,61 @@ mod tests {
         assert_eq!(container.sorted_matrices[2].shape, (8, 8));
 
         println!("✅ Area ordering test passed!");
+    }
+
+    // This test checks whether "segment padding + per-block points" can be
+    // represented by a single global (xl, xr) point for xi generation.
+    // It constructs two segments with different per-block points, pads them to
+    // aligned positions, and compares the batched xi (piecewise) with several
+    // candidate global xi vectors. In general they are NOT equal.
+    #[test]
+    fn test_padding_segments_vs_single_global_point_non_equivalence() {
+        // Build two row-vectors: shapes (1, 8) and (1, 16) so areas are powers of two.
+        let mut matc = MatContainerMyInt::<BlsFr>::new();
+        // Row-major helper: 1 x n
+        let row8 = DenseMatCM::<MyInt, BlsFr>::from_data(vec![vec![0 as MyInt; 8]]);
+        let row16 = DenseMatCM::<MyInt, BlsFr>::from_data(vec![vec![0 as MyInt; 16]]);
+        matc.push(row8);
+        matc.push(row16);
+
+        let mut pc = PointsContainer::<BlsFr>::new();
+        // Per-block points: (xl empty, xr has log2(n) entries)
+        let p1_xr = vec![BlsFr::from(2u64), BlsFr::from(3u64), BlsFr::from(5u64)]; // len=3 -> n=8
+        let p2_xr = vec![BlsFr::from(7u64), BlsFr::from(11u64), BlsFr::from(13u64), BlsFr::from(17u64)]; // len=4 -> n=16
+        // Push with dummy hat/index; we only need points for xi
+        pc.push(BlsFr::zero(), (vec![], p1_xr.clone()), 0, (vec![], vec![0,1,2]));
+        pc.push(BlsFr::zero(), (vec![], p2_xr.clone()), 1, (vec![], vec![0,1,2,3]));
+
+        // Compute flattened length and batched xi
+        let flattened = matc.flatten_and_concat();
+        let r = BlsFr::from(19u64);
+        let xi_batched = pc.xi_concat(r);
+        assert_eq!(flattened.len(), xi_batched.len());
+
+        let total_len = xi_batched.len();
+        let log_total = total_len.ilog2() as usize;
+        let sum_logs = p1_xr.len() + p2_xr.len();
+        // With shapes (1x8) and (1x16), alignment yields total_len = 32, so log_total = 5
+        // But per-block logs sum to 7, strictly greater than 5 -> cannot encode both blocks' points in a single global point
+        assert!(sum_logs > log_total, "Sum of per-block logs must exceed global log; got {} vs {}", sum_logs, log_total);
+
+        // Try several candidate global challenge vectors (length = log_total)
+        let cand1: Vec<BlsFr> = vec![23u64,29,31,37,41].into_iter().map(BlsFr::from).collect();
+        // Embed p1_xr into tail/head positions as naive candidates
+        let mut cand2 = vec![BlsFr::from(0u64); log_total];
+        // place p1_xr at the end
+        for (i, v) in p1_xr.iter().enumerate() { cand2[log_total - p1_xr.len() + i] = *v; }
+        let mut cand3 = vec![BlsFr::from(0u64); log_total];
+        // place p1_xr at the beginning
+        for (i, v) in p1_xr.iter().enumerate() { cand3[i] = *v; }
+
+        let xi_c1 = xi_from_challenges(&cand1);
+        let xi_c2 = xi_from_challenges(&cand2);
+        let xi_c3 = xi_from_challenges(&cand3);
+
+        assert_ne!(xi_batched, xi_c1, "Batched xi should not equal xi from a random single global point");
+        assert_ne!(xi_batched, xi_c2, "Batched xi should not equal xi from a naive tail-embedded global point");
+        assert_ne!(xi_batched, xi_c3, "Batched xi should not equal xi from a naive head-embedded global point");
     }
 
     #[test]
@@ -732,6 +793,111 @@ mod tests {
         
         println!("✅ compute_xi_at_position alignment check test passed!");
     }
+
+    #[test]
+    fn test_pcs_roundtrip_after_square_reorg_mixed_shapes() {
+        // Purpose: Build mixed-shape MatContainerMyInt + PointsContainer, flatten to a single row vector,
+        // and check SmartPC commit_square_myint → open_square_myint → verify_square still holds.
+        // This mimics how leaf commitments are formed from heterogeneous blocks.
+
+    // Shapes to test: heterogeneous, each dim is a power of two, and areas are all different
+    // Areas: 2, 4, 8, 16, 32
+    let shapes: &[(usize, usize)] = &[(1, 2), (2, 2), (1, 8), (2, 8), (4, 8)];
+
+        // Build integer matrices with simple, deterministic contents
+        let mut matc = MatContainerMyInt::<BlsFr>::new();
+        let mut pointc = PointsContainer::<BlsFr>::new();
+
+        for (idx, &(m, n)) in shapes.iter().enumerate() {
+            let mut data = Vec::new();
+            // Col-major: n columns, each length m
+            for col in 0..n {
+                let mut column = Vec::with_capacity(m);
+                for row in 0..m {
+                    // deterministic value that depends on (row,col,idx)
+                    let val: i32 = (idx as i32) * 1000 + (col as i32) * 10 + (row as i32);
+                    column.push(val as MyInt);
+                }
+                data.push(column);
+            }
+            // Keep a copy for building the field matrix below (DenseMatCM::set_data will move `data`)
+            let data_for_field = data.clone();
+            let mut dense = DenseMatCM::<MyInt, BlsFr>::new(m, n);
+            dense.set_data(data);
+            matc.push(dense);
+
+            // Build a random evaluation point matching the shape
+            let log_m = (m as u64).ilog2() as usize;
+            let log_n = (n as u64).ilog2() as usize;
+            let mut rng = test_rng();
+            let xl: Vec<BlsFr> = (0..log_m).map(|_| BlsFr::rand(&mut rng)).collect();
+            let xr: Vec<BlsFr> = (0..log_n).map(|_| BlsFr::rand(&mut rng)).collect();
+
+            // Compute hat via field container to cross-check later if needed
+            let mut field_mat = DenseMatFieldCM::<BlsFr>::new(m, n);
+            // convert from current MyInt matrix (local copy) to Field matrix with same layout
+            let mut field_cols = Vec::with_capacity(n);
+            for j in 0..n {
+                let col: Vec<BlsFr> = data_for_field[j]
+                    .iter()
+                    .map(|&v| BlsFr::from(v as i64))
+                    .collect();
+                field_cols.push(col);
+            }
+            field_mat.set_data(field_cols);
+            let hat = field_mat.proj_lr_challenges(&xl, &xr);
+
+            // Push point to points container
+            pointc.push(hat, (xl, xr), idx, (vec![idx], vec![idx]));
+        }
+
+        // Length consistency between flattened matrices and xi
+        check_length_consistency(&matc, &pointc, BlsFr::from(7u64));
+
+    // Flatten into a single vector for PCS (same logic as xi alignment)
+    let vec_myint = matc.flatten_and_concat();
+
+        // Setup PCS with sufficient qlog: vec length is power-of-two due to padding
+        let total_len = vec_myint.len();
+        let qlog = (total_len as u64).ilog2() as usize; // SmartPC expects q=2^qlog
+        let mut rng = test_rng();
+        let pp: PcsPP<Bls12_381> = SmartPC::<Bls12_381>::setup(qlog, &mut rng).expect("pcs setup failed");
+
+        // Commit the single-row matrix as 1×total_len (col-major: n=1 col, m=total_len rows)
+        let (com, mut tier1) = SmartPC::<Bls12_381>::commit_square_myint(&pp, &vec![vec_myint.clone()], BlsFr::zero()).expect("commit_square_myint failed");
+
+        // Build a batching challenge and xi for points container to compute v (hat batched)
+        let chal = BlsFr::from(5u64);
+        let xi = pointc.xi_concat(chal);
+        let hat_batched = pointc.hat_batched(chal);
+
+        // Check inner product equals batched hat
+        let a_field: Vec<BlsFr> = vec_myint.iter().map(|&x| BlsFr::from(x as i64)).collect();
+        let ip = inner_product(&a_field, &xi);
+        assert_eq!(ip, hat_batched, "Flattened·xi must equal batched hat");
+
+        // Now open at concatenated challenge [xr||xl] derived from the single batched point
+        // We reuse xi construction path: the PCS open_square expects explicit xl/xr for the whole matrix.
+        // Here we simulate a simple case: treat the whole flattened vector as m×n = total_len×1 (xl bits = log(total_len)).
+        let xl_full: Vec<BlsFr> = (0..qlog).map(|_| BlsFr::rand(&mut rng)).collect();
+        let xr_full: Vec<BlsFr> = vec![];
+        let (v_com, v_tilde) = SmartPC::<Bls12_381>::eval(&pp, &vec![a_field.clone()], &xl_full, &xr_full);
+
+        let proof = SmartPC::<Bls12_381>::open_square_myint(
+            &pp,
+            &vec![vec_myint],
+            &xl_full,
+            &xr_full,
+            v_com,
+            com,
+            &mut tier1,
+            v_tilde,
+            BlsFr::zero(),
+        ).expect("open_square_myint failed");
+
+        let ok = SmartPC::<Bls12_381>::verify_square(&pp, com, v_com, &xl_full, &xr_full, &proof).expect("verify_square failed");
+        assert!(ok, "PCS verify_square should succeed on flattened single-row after square conversion");
+    }
 }
 
 /// Debug utility to check length consistency between containers.
@@ -773,6 +939,80 @@ pub fn check_length_consistency<F: PrimeField + core::fmt::Debug>(
         panic!("Length mismatch between flattened matrices and xi vector. Ensure point challenge vector lengths are log2(dimensions).");
     } else {
         println!("✅ Lengths match: {}", flat.len());
+    }
+}
+
+/// Debug utility to assert that the area-sorted insertion is stably aligned between
+/// MatContainerMyInt and PointsContainer.
+/// It checks:
+/// - same number of items
+/// - per-index shape and area match (matrix real shape vs. point-inferred shape)
+/// - start positions are multiples of their areas and non-decreasing
+/// On mismatch it prints detailed diagnostics and panics.
+pub fn check_shapes_aligned<F: PrimeField + core::fmt::Debug>(
+    mat_container: &MatContainerMyInt<F>,
+    point_container: &PointsContainer<F>,
+) {
+    let m_len = mat_container.sorted_shapes.len();
+    let p_len = point_container.sorted_shapes.len();
+
+    if m_len != p_len {
+        eprintln!(
+            "❌ Count mismatch: matrices={} points={} (area-sorted sequences must have equal length)",
+            m_len, p_len
+        );
+        eprintln!("Matrix shapes:   {:?}", mat_container.sorted_shapes);
+        eprintln!("Point shapes:    {:?}", point_container.sorted_shapes);
+        panic!("Mat/Point containers have different counts");
+    }
+
+    let mut ok = true;
+    for i in 0..m_len {
+        let m_shape = mat_container.sorted_shapes[i];
+        let m_area = mat_container.sorted_areas[i];
+
+        let p_shape = point_container.sorted_shapes[i];
+        let p_area = point_container.sorted_areas[i];
+
+        if m_shape != p_shape || m_area != p_area {
+            eprintln!(
+                "❌ Shape/area mismatch at index {i}: mat shape={:?} area={} | point shape={:?} area={}",
+                m_shape, m_area, p_shape, p_area
+            );
+            ok = false;
+        }
+
+        // Check start position alignment for the point stream
+        let start_pos = point_container.sorted_start_position[i];
+        if start_pos % p_area != 0 {
+            eprintln!(
+                "❌ Start position misaligned at index {i}: start_pos={} area={} (must be multiple)",
+                start_pos, p_area
+            );
+            ok = false;
+        }
+
+        if i > 0 {
+            let prev = point_container.sorted_start_position[i - 1] + point_container.sorted_areas[i - 1];
+            // With padding, current start must be >= previous end
+            if start_pos < prev && point_container.sorted_areas[i] >= point_container.sorted_areas[i - 1] {
+                eprintln!(
+                    "❌ Start position order issue at index {i}: start_pos={} < prev_end={} (non-decreasing expected)",
+                    start_pos, prev
+                );
+                ok = false;
+            }
+        }
+    }
+
+    if !ok {
+        // Print compact overviews to help locate clustering issues
+        eprintln!("Matrix areas (asc): {:?}", mat_container.sorted_areas);
+        eprintln!("Point  areas (asc): {:?}", point_container.sorted_areas);
+        eprintln!("Point  starts (asc by area): {:?}", point_container.sorted_start_position);
+        panic!("Shapes/start alignment check failed. Ensure both containers are filled in matching push order for equal-area items and that (xl,xr) match real shapes.");
+    } else {
+        println!("✅ Shapes and start positions aligned ({} items)", m_len);
     }
 }
 

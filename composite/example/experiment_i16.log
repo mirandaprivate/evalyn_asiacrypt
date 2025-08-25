@@ -5,70 +5,69 @@ RAYON_NUM_THREADS: 64
 ========Preparing NN parameters=========================================
 ⌛Lookup table of length 2^18 built
 Lookup table of length 2^18 built
-========End Preparing NN parameters=====================================
+========End Preparing NN parameters===================================== 
 ************************************************************************
 ************************************************************************
 ========Preparing SRS parameters=========================================
-⬜  SRS size: 22021880 B
-🕒  Setup time: 2.018337 seconds
+⌛⬜  SRS size: 22021880 B  
+🕒  Setup time: 2.427078 seconds 
 ========End Setup=========================================
 ************************************************************************
 ======================Unverified NN Feed Forward ============
-⌛Feed forward completed in 11.585694 seconds
+Feed forward completed in 4.641898 seconds
 =================================================
 ⌛Lookup table of length 2^18 built
 NN Feed Forward completed
 ************************************************************************
-========Backward Proof Reduction=========================================
-✅ LookUp reduce_prover completed successfully
-✅ LookUp reduce_prover completed successfully
-✅ RangeProof reduce_prover completed successfully
-⌛✅ LookUp reduce_prover completed successfully
-✅ RangeProof reduce_prover completed successfully
-⌛⌛⌛⌛⌛MatEq: m=1024, n=1
-✅ MatEq reduce_prover completed successfully
-🕒  Reduce prover took 180.152952 seconds
-========Batch Leaf Projection=========================================
-⌛⌛⌛🕒  Batch Leaf projection took 101.185344 seconds
-========End Batch Leaf projection======================================
-Serialized transcript size: 4806784 bytes
-⬜  Proof size before PoP compression: 4806784 B
-************************************************************************
-Committing to pop circuit (representing NN structure)..
-=== Generating R1CS Constraints ===
-⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛R1CS constraints generated successfully!
-Total constraints: 19720637
-Total instance variables: 33
-Total witness variables: 19823228
-⌛📝  Pop circuit commitment size: 41690 bytes
-🕒  Pop circuit commitment took 914.420869 seconds
-************************************************************************
 ========Committing to Params=========================================
-⌛[SmartPC::commit_square_myint] vec_g_len=2^16, vec_h_len=2^16, input n=2^15, m=2^16
-⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛
-🕒  Committing to params took 1210.478799 seconds
-⬜  NN Parameters Commitment size: 576 B
+⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛
+🕒  Committing to params took 1360.499929 seconds 
+⬜  NN Parameters Commitment size: 576 B 
 ========End Committing to Params=========================================
 ************************************************************************
 ========Committing to Auxiliaries=========================================
-[SmartPC::commit_square_myint] vec_g_len=2^16, vec_h_len=2^16, input n=2^15, m=2^16
-⌛⌛🕒  Committing to auxiliaries took 61.216061 seconds
+⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛🕒  Committing to auxiliaries took 755.611105 seconds 
 ========End Committing to Auxiliaries=========================================
-========Open Leaf Commitment=========================================
-[SmartPC::open] vec_g_len=65536, vec_h_len=65536, m=65536, n=32768
-⌛⌛⌛Leaf commitment openning proof size: 37936 B
-🕒  Open Leaf projection took 109.364972 seconds
-========End Open Leaf projection======================================
-⬜  PCS Transcript Size: 37936 B
 ************************************************************************
-Generating PoP proof via Groth16..
-⌛=== Generating R1CS Constraints ===
-⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛R1CS constraints generated successfully!
+========Backward Proof Reduction=========================================
+✅ LookUp reduce_prover completed successfully
+⌛✅ LookUp reduce_prover completed successfully
+✅ RangeProof reduce_prover completed successfully
+⌛✅ LookUp reduce_prover completed successfully
+✅ RangeProof reduce_prover completed successfully
+⌛⌛⌛⌛MatEq: m=1024, n=1
+✅ MatEq reduce_prover completed successfully
+🕒  Reduce prover took 178.017522 seconds 
+========Batch Leaf Projection=========================================
+⌛⌛⌛⌛🕒  Batch Leaf projection took 115.144537 seconds 
+========End Batch Leaf projection======================================
+Serialized transcript size: 4806784 bytes
+⬜  Proof size before PoP compression: 4806784 B 
+************************************************************************
+Committing to pop circuit (representing NN structure)..
+=== Generating R1CS Constraints ===
+⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛R1CS constraints generated successfully!
 Total constraints: 19720637
 Total instance variables: 33
 Total witness variables: 19823228
-⌛⌛⌛⌛📝  PoP proof size after compression: 192 bytes
-🕒  PoP proof generation took 960.759976 seconds
+⌛📝  Pop circuit commitment size: 41690 bytes 
+🕒  Pop circuit commitment took 737.303020 seconds 
+Generating PoP proof via Groth16..
+=== Generating R1CS Constraints ===
+⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛⌛R1CS constraints generated successfully!
+Total constraints: 19720637
+Total instance variables: 33
+Total witness variables: 19823228
+⌛⌛⌛📝  PoP proof size after compression: 192 bytes 
+🕒  PoP proof generation took 765.049400 seconds 
+Clearing intermediate memory before leaf commitment opening...
+Intermediate memory cleared successfully.
+========Open Leaf Commitment=========================================
+⌛Leaf commitment openning proof size: 37936 B
+🕒  Open Leaf projection took 31.226418 seconds 
+========End Open Leaf projection======================================
+⬜  PCS Transcript Size: 37936 B 
+************************************************************************
 Proving the FS transform...
 Original dimensions: 163 constraints x 166 variables (from witness length)
 Padded dimensions: 256 x 256
@@ -79,10 +78,10 @@ Total instance variables: 20
 Total witness variables: 46597
 Original dimensions: 163 constraints x 166 variables (from witness length)
 Padded dimensions: 256 x 256
-⌛⌛⌛⌛⌛⌛[FSBatch::commit_to_transcript] pad witness cols 150211 -> 262144 (rows=256)
+⌛⌛⌛⌛[FSBatch::commit_to_transcript] pad witness cols 150211 -> 262144 (rows=256)
 [FSBatch::commit_to_transcript] witness dims n=262144, m=256, q=65536 (qlog≈16)
 === Generating R1CS Constraints ===
-R1CS constraints generated successfully!
+⌛R1CS constraints generated successfully!
 Total constraints: 2681965
 Total instance variables: 20
 Total witness variables: 2681964
@@ -91,15 +90,15 @@ R1CS constraints generated successfully!
 Total constraints: 2681963
 Total instance variables: 20
 Total witness variables: 2681962
-⌛=== Generating R1CS Constraints ===
+=== Generating R1CS Constraints ===
 R1CS constraints generated successfully!
 Total constraints: 2681877
 Total instance variables: 20
 Total witness variables: 2681876
-[SmartPC::commit_full] vec_g_len=65536, vec_h_len=65536, input n=8192, m=8192
+⌛[SmartPC::commit_full] vec_g_len=65536, vec_h_len=65536, input n=8192, m=8192
 ⌛⌛⌛✅ EqZero reduce_prover completed successfully
 ⌛✅ EqZero reduce_prover completed successfully
-⌛R1CS point flatten length 18
+R1CS point flatten length 18
 === Generating R1CS Constraints ===
 R1CS constraints generated successfully!
 Total constraints: 46598
@@ -110,28 +109,32 @@ R1CS constraints generated successfully!
 Total constraints: 2681965
 Total instance variables: 20
 Total witness variables: 2681964
-=== Generating R1CS Constraints ===
+⌛=== Generating R1CS Constraints ===
 R1CS constraints generated successfully!
 Total constraints: 2681963
 Total instance variables: 20
 Total witness variables: 2681962
-⌛=== Generating R1CS Constraints ===
+=== Generating R1CS Constraints ===
 R1CS constraints generated successfully!
 Total constraints: 2681877
 Total instance variables: 20
 Total witness variables: 2681876
-[SmartPC::open] vec_g_len=65536, vec_h_len=65536, m=8192, n=8192
-⌛🕒  FS transform proving took 428.561171 seconds
+⌛[SmartPC::open] vec_g_len=65536, vec_h_len=65536, m=8192, n=8192
+🕒  FS transform proving took 356.833677 seconds 
 *******************************************************************
 ========Verify NN Protocol=========================================
 ========Verify Leaf Commitment=========================================
-Leaf commitment verification result: false
-😀  Verify leaf projection result: false
-🕒  Verify Leaf projection took 0.080319 seconds
+ check 1 true
+ check 2 true
+ check 3 true
+ check 4 true
+Leaf commitment verification result: true
+😀  Verify leaf projection result: true 
+🕒  Verify Leaf projection took 0.062395 seconds 
 ========End Verify Leaf projection======================================
 ========Verify PoP Proof=========================================
-😀  Verify PoP result: true
-🕒  PoP proof verification took 0.008420 seconds
+😀  Verify PoP result: true 
+🕒  PoP proof verification took 0.006397 seconds 
 ✅ EqZero verify_as_subprotocol completed successfully
 ✅ MatSub verify_as_subprotocol completed successfully
 ================ hadamard shape: 256, 262144
@@ -141,17 +144,31 @@ Leaf commitment verification result: false
 ✅ EqZero verify_as_subprotocol completed successfully
 ✅ MatSub verify_as_subprotocol completed successfully
 ✅ MatMul verify_as_subprotocol completed successfully
+ check 1 true
+ check 2 true
+ check 3 true
+ check 4 true
   Groth vec evals verify: state=true shift=true proof=true rel_ok=true
 [FSBatchGroth::verify_r1cs_constraints] flag1(r1cs)=true flag2(witness)=true flag3(vectors+rel)=true flag4(selection)=true
-Verify leaf commitment result: false
+Verify leaf commitment result: true
 Verify PoP result: true
 Verify FSBatch result: true
 ***********************************************************************
-😀  NN protocol verification result: false
+😀  NN protocol verification result: true 
 ======================
 [FSBatchGroth::get_trans_size] reduce=20256 smart_r1cs=0 smart_witness=32176 groth_total=6368 -> 58800 bytes
   groth detail: r1cs(c=1336,p=224) state(c=1336,p=224) shift(c=1336,p=224) proof(c=1336,p=224) evals=128B
-⬜   Total proof size: 98840 bytes
-🕒  NN protocol verification took 0.220318 seconds
+⬜   Total proof size: 98840 bytes 
+🕒  NN protocol verification took 0.172711 seconds 
 *******************************************************************
-⬜  Peak RAM Usage: 103693916KB 
+*************************************************************************
+========NN Experiment Timing Results======================================
+🕒  Verifying took 0.172715 seconds 
+======================
+[FSBatchGroth::get_trans_size] reduce=20256 smart_r1cs=0 smart_witness=32176 groth_total=6368 -> 58800 bytes
+  groth detail: r1cs(c=1336,p=224) state(c=1336,p=224) shift(c=1336,p=224) proof(c=1336,p=224) evals=128B
+⬜  Proof size: 98840 B 
+⬜  NN Commitment size: 42266 B 
+========End NN Experiment Timing Results==================================
+*************************************************************************
+⬜  Peak RAM Usage: 103634628KB

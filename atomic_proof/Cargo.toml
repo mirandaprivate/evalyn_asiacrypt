@@ -28,6 +28,7 @@ hex = "0.4"
 
 [dev-dependencies]
 criterion = { version = "0.7.0", features = ["html_reports"] }
+ark-poly-commit = { path = "../poly-commit", features = ["std", "parallel"] }
 
 [features]
 default = ["std", "parallel"]

@@ -7,10 +7,9 @@ use std::time::{Duration, Instant};
 
 use composite::protocols::nn::ProtocolNN;
 
-use mat::DenseMatCM;
 use mat::MyShortInt;
 
-const DEPTH: usize = 1024;
+const DEPTH: usize = 16;
 const SHAPE: (usize, usize) = (1024, 1024);
 
 fn main() -> io::Result<()> {
@@ -34,18 +33,32 @@ fn experiment_nn(_iter: u64) {
     println!("====Running experiment for depth: {}, shape: {:?}, bitwidth: {:?}=====", depth, shape, 8 * std::mem::size_of::<MyShortInt>());
 
     let mut nn: ProtocolNN<E> = ProtocolNN::new(depth, shape);
-    
+
+   
+    nn.commit_to_pars();
+    nn.commit_to_witness();
     nn.reduce_prover_and_building_pop_circuit();
     nn.commit_to_pop_circuits();
-    nn.commit_to_pars();
 
-    nn.commit_to_witness();
-    nn.open_leaf_commitment();
+
+
     nn.gen_pop_proof();
-    
+    nn.open_leaf_commitment();
     nn.prove_fs();
 
+
+    let timer_verify = Instant::now();
+    // nn.verify_leaf_commitment();
     nn.verify();
+    let duration_verify = timer_verify.elapsed().as_secs_f64();
+
+    println!("*************************************************************************");
+    println!("========NN Experiment Results======================================");
+    println!("🕒 \x1b[1m Verifying took {:.6} seconds \x1b[0m", duration_verify);
+    println!("⬜ \x1b[1m Proof size: {} B \x1b[0m", nn.get_compressed_proof_size());
+    println!("⬜ \x1b[1m NN Commitment size: {:?} B \x1b[0m", nn.get_nn_commitment_size());
+    println!("========End NN Experiment Results==================================");
+    println!("*************************************************************************");
 
 }
 

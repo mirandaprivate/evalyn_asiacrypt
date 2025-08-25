@@ -115,8 +115,6 @@ impl<F: PrimeField> BatchProjProtocolInput<F> {
         self.mat_container.push(mat);
         self.ready = true;
     }
-
-    // (消息设置逻辑移动到 BatchProj 实现中)
   
 
     pub fn clear(&mut self) {
@@ -244,8 +242,6 @@ impl<F: PrimeField + UniformRand + Absorb + CanonicalSerialize + CanonicalDeseri
         self.protocol_input.set_input_from_matcontainer(mat_container);
     }
 
-
-    // 将原先放在 ProtocolInput 的 set_message 迁移到此处
     pub fn set_message(
         &mut self,
         hat_inputs: Vec<F>,
@@ -580,7 +576,6 @@ impl<F: PrimeField + UniformRand + Absorb + CanonicalSerialize + CanonicalDeseri
         let final_c_hat_index = self.atomic_pop.mapping.final_c_hat_index;
         let final_c_vec_point_index = self.atomic_pop.mapping.final_c_point_index.clone();
 
-        // 方案2：不直接使用 PubInput 全局索引，统一用 PriInput，公开由全局 link 在 NN 顶层建立
         links.push(
             ArithmeticExpression::sub(
                 ArithmeticExpression::pri_input(c_hat_index),
@@ -761,29 +756,29 @@ mod tests {
         let mut private_inputs = vec![BlsFr::zero()];
         private_inputs.extend(prover_trans.get_fs_proof_vec());
 
-        // PUBLIC / PRIVATE 区分:
-        // prepare_atomic_pop 中使用 ArithmeticExpression::pub_input(final_c_hat_index / final_c_vec_point_index[i])
-        // 这些索引是 transcript 中的原始位置，因此这里构造一个与最大索引同长度的 public 向量，
-        // 只在需要公开的位置填入真实值，其余填 0。（这样无需重新映射 expression 中的索引。）
+        // PUBLIC / PRIVATE distinction:
+        // prepare_atomic_pop uses ArithmeticExpression::pub_input(final_c_hat_index / final_c_vec_point_index[i])
+        // These indices are original positions in the transcript, so we construct a public vector with the same length as the max index,
+        // filling in real values only at positions that need to be public, and 0 elsewhere. (This way we don't need to remap indices in expressions.)
         let mapping = &protocol.atomic_pop.mapping;
         let final_c_hat_index = mapping.final_c_hat_index;
         // tuple of (left,right) indices for point
          let final_c_vec_point_index = mapping.final_c_point_index.clone();
 
-        // 计算需要的 public 向量长度 (使用所有 point indices)
+        // Calculate required public vector length (using all point indices)
         let mut max_pub_index = final_c_hat_index;
         for &idx in final_c_vec_point_index.0.iter().chain(final_c_vec_point_index.1.iter()) { max_pub_index = max_pub_index.max(idx); }
-        let pub_len = max_pub_index + 1; // 索引从 0 开始
+        let pub_len = max_pub_index + 1; // indices start from 0
         let mut public_inputs = vec![BlsFr::zero(); pub_len];
 
-        // 从 transcript 中取出公开值
+        // Extract public values from transcript
         let final_c_hat_val = prover_trans.get_at_position(final_c_hat_index);
         public_inputs[final_c_hat_index] = final_c_hat_val;
         for &idx in final_c_vec_point_index.0.iter().chain(final_c_vec_point_index.1.iter()) {
             public_inputs[idx] = prover_trans.get_at_position(idx);
         }
 
-        // 设置到 builder
+        // Set to builder
         cs_builder.set_public_inputs(public_inputs);
         cs_builder.set_private_inputs(private_inputs);
 

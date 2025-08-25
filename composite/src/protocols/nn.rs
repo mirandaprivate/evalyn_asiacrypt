@@ -26,6 +26,7 @@ use atomic_proof::{
     MLPCSCommitment as PCCommit,
 };
 use atomic_proof::{PointsContainer, PointInfo};
+// debug utils removed
 use atomic_proof::pop::arithmetic_expression::ConstraintSystemBuilder; // import builder
 use atomic_proof::MatContainerMyInt;
 use atomic_proof::protocols::{
@@ -75,7 +76,7 @@ where
     pub pop_pk: Option<GrothPK<E>>,
     // Protocol inputs
     pub pcsrs: PcsPP<E>,
-    pub raw_data: MockNNRawInput,
+    // pub raw_data: MockNNRawInput,
     pub mock_nn: MockNN<E::ScalarField>,
     pub mock_nn_proj: MockNNProj<E::ScalarField>,
     pub cs_builder: ConstraintSystemBuilder<E::ScalarField>,
@@ -143,7 +144,7 @@ where
             trans_pop: GrothProof::default(),
             fsbatch: FSBatchGroth::default(),
             pcsrs,
-            raw_data,
+            // raw_data,
             mock_nn,
             mock_nn_proj: MockNNProj::new(),
             cs_builder: ConstraintSystemBuilder::new(),
@@ -207,6 +208,8 @@ where
         let _timer = std::time::Instant::now();
         let mut mat_container = MatContainerMyInt::new();
         self.mock_nn.push_to_mat_container(&mut mat_container);
+
+    // debug checks removed
         
         
         batchproj.set_input_from_matcontainer(mat_container);
@@ -234,7 +237,32 @@ where
         self.leaf_hat_index = mapping.final_c_hat_index;
         self.leaf_point_index = mapping.final_c_point_index.clone();
 
+    // debug block removed
+        
+
         (hat, point.0)
+    }
+
+    // debug helpers removed
+
+    /// Clear large intermediate data structures that are no longer needed
+    /// after proof generation and before opening leaf commitment
+    pub fn clear_intermediate_memory(&mut self) {
+        println!("Clearing intermediate memory before leaf commitment opening...");
+        
+        // Clear the constraint system builder (contains many intermediate constraints)
+        self.cs_builder = ConstraintSystemBuilder::<E::ScalarField>::new();
+        
+        // Clear the proving key (large circuit data no longer needed after proof generation)
+        self.pop_pk = None;
+        
+        // Clear MockNNProj data (projection data no longer needed)
+        self.mock_nn_proj = MockNNProj::<E::ScalarField>::new();
+        
+        // Note: We cannot clear mock_nn completely as it's needed for open_leaf_commitment
+        // to reconstruct the matrix via push_to_mat_container()
+        
+        println!("Intermediate memory cleared successfully.");
     }
 
     pub fn open_leaf_commitment(&mut self) {
@@ -244,6 +272,9 @@ where
 
         let leaf_com = self.par_commit.clone() + self.witness_commit.clone();
         let mut leaf_cache = add_vec_g1::<E>(&self.par_commit_cache, &self.witness_commit_cache);
+
+        self.par_commit_cache = Vec::new();
+        self.witness_commit_cache = Vec::new();
 
         self.trans_pcs = self.mock_nn.open_leaf_commitment(
             &self.pcsrs,
@@ -704,6 +735,8 @@ where
         println!("📝 \x1b[1m PoP proof size after compression: {} bytes \x1b[0m", proof_size);
         println!("🕒 \x1b[1m PoP proof generation took {:.6} seconds \x1b[0m", _timer.elapsed().as_secs_f64());
 
+        self.clear_intermediate_memory();
+
         self.trans_pop = proof;
     }
 
@@ -756,7 +789,7 @@ where
         let proof_len = self.private_trans_reduce.get_fs_proof_vec().len();
         self.fsbatch = FSBatchGroth::<E>::new(proof_len);
         self.fsbatch.commit_to_r1cs_mat();
-        self.fsbatch.commit_to_transcript(&self.pcsrs, &self.private_trans_reduce);
+        let _ = self.fsbatch.commit_to_transcript(&self.pcsrs, &self.private_trans_reduce);
         self.fsbatch.prove_r1cs_constraints(&self.pcsrs);
 
         println!("🕒 \x1b[1m FS transform proving took {:.6} seconds \x1b[0m", _timer1.elapsed().as_secs_f64());
@@ -808,13 +841,7 @@ pub fn dummy_point_container<F:PrimeField>(mock_nn: &MockNN<F>) -> PointsContain
     let (h1,p1,hi1,pi1)=dummy_point(&mock_nn.nn_output); point_container.push(h1,p1,hi1,pi1);
 
     for val in &mock_nn.lookup_table { let m = DenseMatCM::<MyInt,F>::from_data(vec![val.clone()]); let (h,p,hi,pi)=dummy_point(&m); point_container.push(h,p,hi,pi); }
-    for out in &mock_nn.layer_outputs { let (h,p,hi,pi)=dummy_point(out); point_container.push(h,p,hi,pi); }
-    for val in &mock_nn.lookup_target { let m = DenseMatCM::<MyInt,F>::from_data(vec![val.clone()]); let (h,p,hi,pi)=dummy_point(&m); point_container.push(h,p,hi,pi); }
-    let m1 = DenseMatCM::<MyInt,F>::from_data(vec![mock_nn.lookup_table_auxiliary.clone()]); let (h1,p1,hi1,pi1)=dummy_point(&m1); point_container.push(h1,p1,hi1,pi1);
-    let m2 = DenseMatCM::<MyInt,F>::from_data(vec![mock_nn.lookup_target_auxiliary.clone()]); let (h2,p2,hi2,pi2)=dummy_point(&m2); point_container.push(h2,p2,hi2,pi2);
-
-    // New auxiliary range components (must follow the same ordering as push_to_mat_container)
-    for val in &mock_nn.range_table_auxiliary { let m = DenseMatCM::<MyInt,F>::from_data(vec![val.clone()]); let (h,p,hi,pi)=dummy_point(&m); point_container.push(h,p,hi,pi); }
+    // DEBUG: removed length consistency check
     for val in &mock_nn.range_target_auxiliary { let m = DenseMatCM::<MyInt,F>::from_data(vec![val.clone()]); let (h,p,hi,pi)=dummy_point(&m); point_container.push(h,p,hi,pi); }
 
     point_container

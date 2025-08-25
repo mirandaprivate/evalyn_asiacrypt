@@ -45,7 +45,7 @@ cargo build --workspace --release
 The NN experiment example lives in the `composite` crate.
 
 ```bash
-cargo run -p composite --example experiment_nn --release
+cargo run --release -p composite --features jemalloc --example experiment_nn
 ```
 
 Example logs may be written under `composite/example/*.log`.
@@ -86,22 +86,22 @@ cargo test -p atomic_proof --release
 
 ### System and setup
 
-We conducted experiments on an Alibaba Cloud Elastic Compute Service (ECS) instance equipped with 64 ARMv8 (aarch64) cores clocked at 3.0 GHz and 126 GB RAM. The server has 64 MB shared L3 cache and runs Ubuntu 22.04 LTS (Linux kernel 5.15).
+We conducted experiments on an Alibaba Cloud Elastic Compute Service (ECS) instance equipped with 64 Intel Xeon 6982P-C (x86_64) vCPUs clocked between 0.8–3.9 GHz and 256 GB RAM. The server has a 504 MB shared L3 cache and runs Ubuntu 22.04 LTS (Linux kernel 5.15).
 
 ### Model/config: Quantized Multi-Layer Perceptron (MLP)
 
 We evaluated our system using a mock quantized Multi-Layer Perceptron (MLP), a fundamental NN architecture.
 The MLP consists of 1024 layers, each defined by the transformation:
 
-\[ Y = \text{sigmoid}(W \cdot X + B) \]
+	Y = sigmoid(W X + B)
 
 where:
-- \( W \): A 1024 × 1024 weight matrix, quantized to 8-bit integers.
-- \( X \): A 1024-dimensional input vector, quantized to 8-bit integers.
-- \( Y \): A 1024-dimensional output vector.
-- \( B \): A 1024-dimensional bias vector, quantized to 8-bit integers.
+- W: A 1024 × 1024 weight matrix, quantized to 8-bit integers.
+- X: A 1024-dimensional input vector, quantized to 8-bit integers.
+- Y: A 1024-dimensional output vector.
+- B: A 1024-dimensional bias vector, quantized to 8-bit integers.
 
-Each layer contains \( 1024 \times 1024 + 1024 = 1,049,600 \) parameters, resulting in a total of approximately \( 1,049,600 \times 1,024 \approx 1.075 \times 10^9 \approx 2^{30} \) parameters across 1024 layers.
+Each layer contains 1024 x 1024 + 1024 = 1,049,600 parameters, resulting in a total of approximately 2^{30} parameters across 1024 layers.
 
 ### Performance summary
 
@@ -109,13 +109,13 @@ Overall metrics for the NN example under two quantization modes (`RAYON_NUM_THRE
 
 | Metric                               | 8-bit (i8/i32) | 16-bit (i16/i64) |
 |--------------------------------------|----------------:|-----------------:|
-| Commitment time — parameters (s)     | 1104.60         | 1210.48          |
-| Commitment time — structure (s)      | 931.60          | 914.42           |
-| Commitment size (KB)                 | 41.69           | 41.69            |
-| Prover time — total (s)              | 1747.62         | 1839.24          |
+| Commitment time — parameters (s)     | 1276.80         | 1360.50          |
+| Commitment time — structure (s)      | 747.07          | 737.30           |
+| Commitment size (KB)                 | 42.27           | 42.27            |
+| Prover time — total (s)              | 2090.71         | 2201.88          |
 | Proof size (KB)                      | 98.84           | 98.84            |
-| Verifier time (ms)                   | 220.13          | 220.32           |
-| Peak RAM (GB)                        | 89.41           | 103.69           |
+| Verifier time (ms)                   | 173.19          | 172.72           |
+| Peak RAM (GB)                        | 87.42           | 103.63           |
 
 ### Prover time breakdown
 
@@ -123,13 +123,13 @@ Detailed decomposition of prover wall-clock time.
 
 | Component                           | 8-bit (s) | 16-bit (s) |
 |-------------------------------------|----------:|-----------:|
-| Auxiliary input commitment          | 37.61     | 61.22      |
-| Proof reduction                     | 230.18    | 281.34     |
-| PoP proving                         | 976.63    | 960.76     |
-| Leaf commitment opening             | 95.24     | 109.36     |
-| Fiat–Shamir transform proving       | 407.96    | 426.56     |
-| Total                               | 1747.62   | 1839.24    |
-| v.s Unverified computation          | 7.88s     | 11.59      |
+| Auxiliary input commitment          | 733.08    | 755.61     |
+| Proof reduction                     | 218.80    | 293.16     |
+| PoP proving                         | 775.36    | 765.05     |
+| Leaf commitment opening             | 25.46     | 31.23      |
+| Fiat–Shamir transform proving       | 338.01    | 356.83     |
+| Total                               | 2090.71   | 2201.88    |
+| v.s Unverified computation          | 3.53      | 4.64       |
 
 ### Notes on measurement
 
@@ -142,7 +142,6 @@ Detailed decomposition of prover wall-clock time.
 - Peak RAM is roughly proportional to the total number of NN parameters.
 - Introducing intermediate (per-layer or per-block) commitments partitions a large model into smaller sub-NNs, reducing the prover's peak RAM.
 - However, decomposing a large NN into smaller components increases the overall proof size and the verifier time.
-- Both PoP proving and Fiat–Shamir transform proving invoke the Groth16 prover, for which we have not yet enabled the parallelization feature.
 
 ## Windows/WSL notes
 
@@ -152,7 +151,7 @@ Detailed decomposition of prover wall-clock time.
 
 ```bash
 # Suggested for practical prover performance
-RAYON_NUM_THREADS=64 cargo run -p composite --example experiment_nn --release
+RAYON_NUM_THREADS=64 cargo run --release -p composite --features jemalloc --example experiment_nn
 ```
 
 ## License

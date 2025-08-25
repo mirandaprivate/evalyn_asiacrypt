@@ -690,6 +690,25 @@ pub fn proj_left_myint<E:Pairing> (
     result
 }
 
+/// Memory-optimized projection of a column-major flat vector to the left vector
+/// flat is stored column-major: column j = flat[j*m..(j+1)*m]
+pub fn proj_left_myint_flat<E:Pairing> (
+    flat: &[MyInt],
+    l_vec: &[E::ScalarField],
+    m: usize,  // number of rows
+    n: usize,  // number of columns
+) -> Vec<E::ScalarField> {
+    // 并行计算每一列的内积，避免分配临时 Vec
+    (0..n).into_par_iter().map(|i| {
+        let start = i * m;
+        let end = start + m;
+        flat[start..end].iter()
+            .zip(l_vec.iter())
+            .map(|(c, l)| E::ScalarField::from(*c) * l)
+            .sum()
+    }).collect()
+}
+
 
 /// Projection of a col major matrix to the left vector
 pub fn proj_right_myint<E:Pairing> (
@@ -712,4 +731,22 @@ pub fn proj_right_myint<E:Pairing> (
         result.push(ip_row);
     }
     result
+}
+
+/// Memory-optimized projection of a column-major flat vector to the right vector
+/// flat is stored column-major: column j = flat[j*m..(j+1)*m]
+
+pub fn proj_right_myint_flat<E:Pairing> (
+    flat: &[MyInt],
+    r_vec: &[E::ScalarField],
+    m: usize,  // number of rows
+    n: usize,  // number of columns
+) -> Vec<E::ScalarField> {
+    // 并行计算每一行的内积，避免分配临时 Vec
+    (0..m).into_par_iter().map(|i| {
+        (0..n).map(|j| {
+            let idx = j * m + i;
+            E::ScalarField::from(flat[idx]) * r_vec[j]
+        }).sum()
+    }).collect()
 }

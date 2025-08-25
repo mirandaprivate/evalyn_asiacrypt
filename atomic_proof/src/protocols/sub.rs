@@ -126,8 +126,8 @@ impl<F: PrimeField + UniformRand + Absorb + CanonicalSerialize + CanonicalDeseri
 
     fn verify_as_subprotocol(&mut self, trans: &mut Transcript<F>) -> bool {
         // The verifier knows point_c. It only needs to read hat_a and hat_b from the transcript.
-        let m = self.protocol_input.shape_a.0;
-        let n = self.protocol_input.shape_a.1;
+        // let m = self.protocol_input.shape_a.0;
+        // let n = self.protocol_input.shape_a.1;
         
         // println!("MatSub verify_as_subprotocol: m={}, n={}", m, n);
         // println!("verify_as_subprotocol: transcript length = {}, pointer = {}", trans.trans_seq.len(), trans.pointer);

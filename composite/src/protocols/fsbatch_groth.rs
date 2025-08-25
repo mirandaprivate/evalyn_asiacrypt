@@ -549,7 +549,7 @@ where
             "Proof_state_hat relation failed"
         );
        
-        // witness 直接使用列主序数据（与 commit_to_transcript 时一致）
+        // witness directly uses column-major data (consistent with commit_to_transcript)
         let witness_formatted: Vec<Vec<E::ScalarField>> = self.r1cs_prover_input.witness_mat.data.clone();
 
         // use the open algorithm of zkSMART to prove the projection of w and (a || b || c || c)
@@ -749,7 +749,7 @@ where
         );
         batch_points.verify(&mut self.reduce_trans);
         
-        // BatchPoint 使用不同的 atomic_pop 结构，直接访问字段
+        // BatchPoint uses different atomic_pop structure, directly access fields
         let hat_w = batch_points.atomic_pop.c_hat;
         let point_w = batch_points.atomic_pop.c_point.clone();
         let _hat_w_index = batch_points.atomic_pop.mapping.c_hat_index;
@@ -764,7 +764,7 @@ where
             vec![a_point_index, b_point_index, c_point_index_final.clone(), c_point_index_final],
         );
         batch_proj.verify(&mut self.reduce_trans);
-        // BatchProjField 也使用不同的 atomic_pop 结构，直接访问字段
+        // BatchProjField also uses different atomic_pop structure, directly access fields
         let r1cs_hat = batch_proj.atomic_pop.c_hat;
         let r1cs_point = batch_proj.atomic_pop.c_point.clone();
         let _r1cs_hat_index = batch_proj.atomic_pop.mapping.c_hat_index;

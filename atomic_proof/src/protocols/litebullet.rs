@@ -1,7 +1,7 @@
 //! Implement the litebullet protocol for inner product zero-knowledge proofs
 //!
 use rayon::prelude::*;
-use libc;
+// use libc;
 
 use ark_ff::PrimeField;
 use ark_crypto_primitives::sponge::Absorb;

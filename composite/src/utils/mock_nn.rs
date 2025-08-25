@@ -134,38 +134,38 @@ where
         // Push leaf node Projections of the NN to the point container for batch proj
         pub fn push_leaves_to_point_container(&self, point_container: &mut PointsContainer<F>) {
 
-        for i in 0..self.weights_proj.len() {
-            point_container.push_point(&self.weights_proj[i]);
-        }
+            for i in 0..self.weights_proj.len() {
+                point_container.push_point(&self.weights_proj[i]);
+            }
 
-        for i in 0..self.biases_proj.len() {
-            point_container.push_point(&self.biases_proj[i]);
-        }
+            for i in 0..self.biases_proj.len() {
+                point_container.push_point(&self.biases_proj[i]);
+            }
 
-        point_container.push_point(&self.nn_input_proj);
-        point_container.push_point(&self.nn_output_proj);
+            point_container.push_point(&self.nn_input_proj);
+            point_container.push_point(&self.nn_output_proj);
 
-        for i in 0..self.lookup_table_proj.len() {
-            point_container.push_point(&self.lookup_table_proj[i]);
-        }
+            for i in 0..self.lookup_table_proj.len() {
+                point_container.push_point(&self.lookup_table_proj[i]);
+            }
 
-        for i in 0..self.layer_outputs_proj.len() {
-            point_container.push_point(&self.layer_outputs_proj[i]);
-        }
+            for i in 0..self.layer_outputs_proj.len() {
+                point_container.push_point(&self.layer_outputs_proj[i]);
+            }
 
-        for i in 0..self.lookup_target_proj.len() {
-            point_container.push_point(&self.lookup_target_proj[i]);
-        }
+            for i in 0..self.lookup_target_proj.len() {
+                point_container.push_point(&self.lookup_target_proj[i]);
+            }
 
-        point_container.push_point(&self.lookup_table_auxiliary_proj);
-        point_container.push_point(&self.lookup_target_auxiliary_proj);
+            point_container.push_point(&self.lookup_table_auxiliary_proj);
+            point_container.push_point(&self.lookup_target_auxiliary_proj);
 
-        for i in 0..self.range_table_auxiliary_proj.len() {
-            point_container.push_point(&self.range_table_auxiliary_proj[i]);
-        }
+            for i in 0..self.range_table_auxiliary_proj.len() {
+                point_container.push_point(&self.range_table_auxiliary_proj[i]);
+            }
 
-        for i in 0..self.range_target_auxiliary_proj.len() {
-            point_container.push_point(&self.range_target_auxiliary_proj[i]);
+            for i in 0..self.range_target_auxiliary_proj.len() {
+                point_container.push_point(&self.range_target_auxiliary_proj[i]);
         }
     }
 }
@@ -432,7 +432,7 @@ where
         let lookup_target_auxiliary_mat = DenseMatCM::<MyInt, F>::from_data(vec![self.lookup_target_auxiliary.clone()]);
         mat_container.push(lookup_target_auxiliary_mat);
 
-    for i in 0..self.range_table_auxiliary.len() {
+        for i in 0..self.range_table_auxiliary.len() {
             let mat = DenseMatCM::<MyInt, F>::from_data(vec![self.range_table_auxiliary[i].clone()]);
             mat_container.push(mat);
         }
@@ -572,8 +572,8 @@ where
     pub fn commit_to_leaves<E: Pairing>(&self, pcsrs: &PcsPP<E>) -> (PairingOutput<E>, Vec<E::G1>) {
         let vec = self.to_flattened_leaves();
         
-        let (leaves_com, leaves_com_cache) = SmartPC::<E>::commit_square_myint(
-            pcsrs, &vec![vec], E::ScalarField::zero()
+        let (leaves_com, leaves_com_cache) = SmartPC::<E>::commit_square_myint_flat(
+            pcsrs, &vec, E::ScalarField::zero()
         ).expect("commit_full failed for witness");
 
         (leaves_com, leaves_com_cache)
@@ -584,8 +584,9 @@ where
         self.push_to_mat_container_without_pars(&mut mat_container);
         let vec = mat_container.into_flattened_vec();
 
-        let (leaves_com, leaves_com_cache) = SmartPC::<E>::commit_square_myint(
-            pcsrs, &vec![vec], E::ScalarField::zero()
+        // Use the flat (streaming) commit to stay consistent with other commits
+        let (leaves_com, leaves_com_cache) = SmartPC::<E>::commit_square_myint_flat(
+            pcsrs, &vec, E::ScalarField::zero()
         ).expect("commit_full failed for witness");
 
         (leaves_com, leaves_com_cache)
@@ -596,15 +597,15 @@ where
         self.push_pars_to_mat_container(&mut mat_container);
         let vec = mat_container.into_flattened_vec();
 
-        let (par_com, par_com_cache) = SmartPC::<E>::commit_square_myint(
-            pcsrs, &vec![vec], E::ScalarField::zero()
+        let (par_com, par_com_cache) = SmartPC::<E>::commit_square_myint_flat(
+            pcsrs, &vec, E::ScalarField::zero()
         ).expect("commit_full failed for witness");
 
         (par_com, par_com_cache)
     }
 
     pub fn open_leaf_commitment<E: Pairing>(
-        &self,
+        &mut self,
         pcsrs: &PcsPP<E>,
         leaf_com: &PairingOutput<E>,
         hat: &E::ScalarField,
@@ -614,14 +615,18 @@ where
         // Reconstruct the same flattened matrix used in commitment (single row)
         let mut mat_container = MatContainerMyInt::new();
         self.push_to_mat_container(&mut mat_container);
+        self.clear();
         let vec = mat_container.into_flattened_vec(); // Vec<MyInt>
-    
+        // // Recompute the combined commitment to ensure reshape alignment
+        // let (combined_com, mut combined_tier1) = SmartPC::<E>::commit_square_myint_flat(
+        //     pcsrs, &vec, E::ScalarField::zero()
+        // ).expect("commit_square_myint_flat failed in open_leaf_commitment");
 
         let hat_com = pcsrs.u * hat;
 
-        let trans = SmartPC::<E>::open_square_myint(
+        let trans = SmartPC::<E>::open_square_myint_flat(
             pcsrs,
-            &vec![vec],
+            &vec,
             point,
             &Vec::new(),
             hat_com,
@@ -643,6 +648,15 @@ where
         hat: E::ScalarField,
         point: &Vec<E::ScalarField>,
     ) -> bool {
+        // // Recompute combined commitment to match the open path
+        // let mut mat_container = MatContainerMyInt::new();
+        // self.push_to_mat_container(&mut mat_container);
+        // let vec = mat_container.into_flattened_vec();
+        // let (combined_com, _) = SmartPC::<E>::commit_square_myint_flat(
+        //     pcsrs, &vec, E::ScalarField::zero()
+        // ).expect("commit_square_myint_flat failed in verify_leaf_commitment");
+
+
         let hat_com = pcsrs.u * hat;
         let result = SmartPC::<E>::verify_square(
             pcsrs,
