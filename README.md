@@ -112,7 +112,7 @@ Overall metrics for the NN example under two quantization modes (`RAYON_NUM_THRE
 | Commitment time — parameters (s)     | 1276.80         | 1360.50          |
 | Commitment time — structure (s)      | 747.07          | 737.30           |
 | Commitment size (KB)                 | 42.27           | 42.27            |
-| Prover time — total (s)              | 2090.71         | 2201.88          |
+| Prover time — total (s)              | 2090.71         | 2210.88          |
 | Proof size (KB)                      | 98.84           | 98.84            |
 | Verifier time (ms)                   | 173.19          | 172.72           |
 | Peak RAM (GB)                        | 87.42           | 103.63           |
@@ -128,7 +128,7 @@ Detailed decomposition of prover wall-clock time.
 | PoP proving                         | 775.36    | 765.05     |
 | Leaf commitment opening             | 25.46     | 31.23      |
 | Fiat–Shamir transform proving       | 338.01    | 356.83     |
-| Total                               | 2090.71   | 2201.88    |
+| Total                               | 2090.71   | 2210.88    |
 | v.s Unverified computation          | 3.53      | 4.64       |
 
 ### Notes on measurement
@@ -168,5 +168,6 @@ at your option.
 If you use this codebase in academic work, please cite the paper:
 
 Scalable zkSNARKs for Matrix Computations: A Generic Framework for Verifiable Deep Learning
+
 
 An appropriate BibTeX entry can be added here when available.
