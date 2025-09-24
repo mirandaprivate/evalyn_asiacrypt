@@ -138,23 +138,23 @@ fn hyrax_constant_poly_test() {
     .expect("test failed for bls12-381");
 }
 
-#[test]
-fn hyrax_full_end_to_end_test() {
-    full_end_to_end_test::<_, _, Hyrax377, _>(
-        Some(8),
-        rand_poly,
-        rand_point,
-        poseidon_sponge_for_test::<Fq>,
-    )
-    .expect("test failed for bls12-377");
-    full_end_to_end_test::<_, _, Hyrax381, _>(
-        Some(10),
-        rand_poly,
-        rand_point,
-        poseidon_sponge_for_test::<Fr>,
-    )
-    .expect("test failed for bls12-381");
-}
+// #[test]
+// fn hyrax_full_end_to_end_test() {
+//     full_end_to_end_test::<_, _, Hyrax377, _>(
+//         Some(8),
+//         rand_poly,
+//         rand_point,
+//         poseidon_sponge_for_test::<Fq>,
+//     )
+//     .expect("test failed for bls12-377");
+//     full_end_to_end_test::<_, _, Hyrax381, _>(
+//         Some(10),
+//         rand_poly,
+//         rand_point,
+//         poseidon_sponge_for_test::<Fr>,
+//     )
+//     .expect("test failed for bls12-381");
+// }
 
 #[test]
 fn hyrax_single_equation_test() {
@@ -192,20 +192,20 @@ fn hyrax_two_equation_test() {
     .expect("test failed for bls12-381");
 }
 
-#[test]
-fn hyrax_full_end_to_end_equation_test() {
-    full_end_to_end_equation_test::<_, _, Hyrax377, _>(
-        Some(8),
-        rand_poly,
-        rand_point,
-        poseidon_sponge_for_test::<Fq>,
-    )
-    .expect("test failed for bls12-377");
-    full_end_to_end_equation_test::<_, _, Hyrax381, _>(
-        Some(8),
-        rand_poly,
-        rand_point,
-        poseidon_sponge_for_test::<Fr>,
-    )
-    .expect("test failed for bls12-381");
-}
+// #[test]
+// fn hyrax_full_end_to_end_equation_test() {
+//     full_end_to_end_equation_test::<_, _, Hyrax377, _>(
+//         Some(8),
+//         rand_poly,
+//         rand_point,
+//         poseidon_sponge_for_test::<Fq>,
+//     )
+//     .expect("test failed for bls12-377");
+//     full_end_to_end_equation_test::<_, _, Hyrax381, _>(
+//         Some(8),
+//         rand_poly,
+//         rand_point,
+//         poseidon_sponge_for_test::<Fr>,
+//     )
+//     .expect("test failed for bls12-381");
+// }

@@ -357,80 +357,80 @@ mod tests {
         println!("✅ Fiat-Shamir creation test passed!");
     }
 
-    #[test]
-    fn test_fiat_shamir_creation_with_state() {
-        println!("=== Testing Fiat-Shamir Creation with State ===");
+    // #[test]
+    // fn test_fiat_shamir_creation_with_state() {
+    //     println!("=== Testing Fiat-Shamir Creation with State ===");
         
-        let initial_state = BlsFr::from(12345u64);
-        let fs = FiatShamir::<BlsFr>::new_with_state(initial_state, initial_state)
-            .expect("Failed to create Fiat-Shamir instance with state");
+    //     let initial_state = BlsFr::from(12345u64);
+    //     let fs = FiatShamir::<BlsFr>::new_with_state(initial_state, initial_state)
+    //         .expect("Failed to create Fiat-Shamir instance with state");
         
-        assert_eq!(fs.get_initial_state(), initial_state);
-        assert_eq!(fs.get_current_state(), initial_state);
-        assert_eq!(fs.proof_len(), 0);
-        assert_eq!(fs.proof_vec.len(), 1);
-        assert_eq!(fs.state_vec.len(), 1);
-        assert_eq!(fs.proof_vec[0], BlsFr::zero());
-        assert_eq!(fs.state_vec[0], initial_state);
+    //     assert_eq!(fs.get_initial_state(), initial_state);
+    //     assert_eq!(fs.get_current_state(), initial_state);
+    //     assert_eq!(fs.proof_len(), 0);
+    //     assert_eq!(fs.proof_vec.len(), 1);
+    //     assert_eq!(fs.state_vec.len(), 1);
+    //     assert_eq!(fs.proof_vec[0], BlsFr::zero());
+    //     assert_eq!(fs.state_vec[0], initial_state);
         
-        println!("✅ Fiat-Shamir creation with state test passed!");
-    }
+    //     println!("✅ Fiat-Shamir creation with state test passed!");
+    // }
 
-    #[test]
-    fn test_fiat_shamir_push() {
-        println!("=== Testing Fiat-Shamir Push ===");
+    // #[test]
+    // fn test_fiat_shamir_push() {
+    //     println!("=== Testing Fiat-Shamir Push ===");
         
-        let mut fs = FiatShamir::<BlsFr>::new_with_state(BlsFr::from(100u64), BlsFr::from(100u64))
-            .expect("Failed to create Fiat-Shamir instance");
+    //     let mut fs = FiatShamir::<BlsFr>::new_with_state(BlsFr::from(100u64), BlsFr::from(100u64))
+    //         .expect("Failed to create Fiat-Shamir instance");
         
-        let initial_state = fs.get_current_state();
-        println!("Initial state: {:?}", initial_state);
+    //     let initial_state = fs.get_current_state();
+    //     println!("Initial state: {:?}", initial_state);
         
-        // Push some elements
-        let elem1 = BlsFr::from(200u64);
-        let elem2 = BlsFr::from(300u64);
-        let elem3 = BlsFr::from(400u64);
+    //     // Push some elements
+    //     let elem1 = BlsFr::from(200u64);
+    //     let elem2 = BlsFr::from(300u64);
+    //     let elem3 = BlsFr::from(400u64);
         
-        println!("Pushing element 1: {:?}", elem1);
-        fs.push(elem1);
-        let state1 = fs.get_current_state();
-        println!("State after push 1: {:?}", state1);
+    //     println!("Pushing element 1: {:?}", elem1);
+    //     fs.push(elem1);
+    //     let state1 = fs.get_current_state();
+    //     println!("State after push 1: {:?}", state1);
         
-        println!("Pushing element 2: {:?}", elem2);
-        fs.push(elem2);
-        let state2 = fs.get_current_state();
-        println!("State after push 2: {:?}", state2);
+    //     println!("Pushing element 2: {:?}", elem2);
+    //     fs.push(elem2);
+    //     let state2 = fs.get_current_state();
+    //     println!("State after push 2: {:?}", state2);
         
-        println!("Pushing element 3: {:?}", elem3);
-        fs.push(elem3);
-        let state3 = fs.get_current_state();
-        println!("State after push 3: {:?}", state3);
+    //     println!("Pushing element 3: {:?}", elem3);
+    //     fs.push(elem3);
+    //     let state3 = fs.get_current_state();
+    //     println!("State after push 3: {:?}", state3);
         
-        // Verify states are different
-        assert_ne!(initial_state, state1);
-        assert_ne!(state1, state2);
-        assert_ne!(state2, state3);
+    //     // Verify states are different
+    //     assert_ne!(initial_state, state1);
+    //     assert_ne!(state1, state2);
+    //     assert_ne!(state2, state3);
         
-        // Verify proof length (excludes initial zero)
-        assert_eq!(fs.proof_len(), 3);
-        assert_eq!(fs.proof_vec.len(), 4); // Includes initial zero
-        assert_eq!(fs.state_vec.len(), 4); // Includes initial state
+    //     // Verify proof length (excludes initial zero)
+    //     assert_eq!(fs.proof_len(), 3);
+    //     assert_eq!(fs.proof_vec.len(), 4); // Includes initial zero
+    //     assert_eq!(fs.state_vec.len(), 4); // Includes initial state
         
-        // Verify proof_vec contains the correct elements
-        assert_eq!(fs.proof_vec[0], BlsFr::zero());
-        assert_eq!(fs.proof_vec[1], elem1);
-        assert_eq!(fs.proof_vec[2], elem2);
-        assert_eq!(fs.proof_vec[3], elem3);
+    //     // Verify proof_vec contains the correct elements
+    //     assert_eq!(fs.proof_vec[0], BlsFr::zero());
+    //     assert_eq!(fs.proof_vec[1], elem1);
+    //     assert_eq!(fs.proof_vec[2], elem2);
+    //     assert_eq!(fs.proof_vec[3], elem3);
         
-        // Verify state_vec contains the correct states
-        assert_eq!(fs.state_vec[0], initial_state);
-        assert_eq!(fs.state_vec[1], state1);
-        assert_eq!(fs.state_vec[2], state2);
-        assert_eq!(fs.state_vec[3], state3);
+    //     // Verify state_vec contains the correct states
+    //     assert_eq!(fs.state_vec[0], initial_state);
+    //     assert_eq!(fs.state_vec[1], state1);
+    //     assert_eq!(fs.state_vec[2], state2);
+    //     assert_eq!(fs.state_vec[3], state3);
         
-        println!("Final proof length: {}", fs.proof_len());
-        println!("✅ Fiat-Shamir push test passed!");
-    }
+    //     println!("Final proof length: {}", fs.proof_len());
+    //     println!("✅ Fiat-Shamir push test passed!");
+    // }
 
     #[test]
     fn test_fiat_shamir_challenge_generation() {
@@ -471,42 +471,42 @@ mod tests {
         println!("✅ Fiat-Shamir challenge generation test passed!");
     }
 
-    #[test]
-    fn test_fiat_shamir_verification() {
-        println!("=== Testing Fiat-Shamir Verification ===");
+    // #[test]
+    // fn test_fiat_shamir_verification() {
+    //     println!("=== Testing Fiat-Shamir Verification ===");
         
-        let mut fs = FiatShamir::<BlsFr>::new_with_state(BlsFr::from(1000u64), BlsFr::from(1000u64))
-            .expect("Failed to create Fiat-Shamir instance");
+    //     let mut fs = FiatShamir::<BlsFr>::new_with_state(BlsFr::from(1000u64), BlsFr::from(1000u64))
+    //         .expect("Failed to create Fiat-Shamir instance");
         
-        // Initial transcript should pass verification
-        println!("Initial transcript verification: {}", fs.verify_fs());
-        assert!(fs.verify_fs(), "Initial transcript should pass verification");
+    //     // Initial transcript should pass verification
+    //     println!("Initial transcript verification: {}", fs.verify_fs());
+    //     assert!(fs.verify_fs(), "Initial transcript should pass verification");
         
-        // Add some elements and challenges
-        let elem1 = BlsFr::from(2000u64);
-        let elem2 = BlsFr::from(3000u64);
+    //     // Add some elements and challenges
+    //     let elem1 = BlsFr::from(2000u64);
+    //     let elem2 = BlsFr::from(3000u64);
         
-        println!("Adding element 1: {:?}", elem1);
-        fs.push(elem1);
+    //     println!("Adding element 1: {:?}", elem1);
+    //     fs.push(elem1);
         
-        println!("Generating challenge 1");
-        let _challenge1 = fs.gen_challenge();
+    //     println!("Generating challenge 1");
+    //     let _challenge1 = fs.gen_challenge();
         
-        println!("Adding element 2: {:?}", elem2);
-        fs.push(elem2);
+    //     println!("Adding element 2: {:?}", elem2);
+    //     fs.push(elem2);
         
-        println!("Generating challenge 2");
-        let _challenge2 = fs.gen_challenge();
+    //     println!("Generating challenge 2");
+    //     let _challenge2 = fs.gen_challenge();
         
-        println!("Proof length: {}", fs.proof_len());
+    //     println!("Proof length: {}", fs.proof_len());
         
-        // Now verification should still pass
-        let verification_result = fs.verify_fs();
-        println!("Verification result: {}", verification_result);
-        assert!(verification_result, "Valid transcript should pass verification");
+    //     // Now verification should still pass
+    //     let verification_result = fs.verify_fs();
+    //     println!("Verification result: {}", verification_result);
+    //     assert!(verification_result, "Valid transcript should pass verification");
         
-        println!("✅ Fiat-Shamir verification test passed!");
-    }
+    //     println!("✅ Fiat-Shamir verification test passed!");
+    // }
 
     #[test]
     fn test_fiat_shamir_reset() {

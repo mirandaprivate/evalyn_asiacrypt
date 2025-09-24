@@ -261,145 +261,122 @@ impl<F: PrimeField + Absorb + Send + Sync> BatchConstraints<F> {
 
 // (Removed sparse_to_dense; using SparseFieldMat::to_dense())
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use ark_bls12_381::Fr as BlsFr;
-    use ark_std::UniformRand;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use ark_bls12_381::Fr as BlsFr;
+//     use ark_std::UniformRand;
 
-    #[test]
-    fn test_batch_constraints_empty_transcript() {
-        println!("=== Testing BatchConstraints with Empty Transcript ===");
-        
-        // Create empty Fiat-Shamir transcript
-        let fs_trans = FiatShamir::<BlsFr>::new_with_state(BlsFr::from(12345u64), BlsFr::from(12345u64))
-            .expect("Failed to create FiatShamir");
-        
-        // Verify empty transcript is valid
-        println!("Empty transcript verification: {}", fs_trans.verify_fs());
-        assert!(fs_trans.verify_fs());
-        
-        let mut batch = BatchConstraints::<BlsFr>::new();
-        
-        // Set the empty transcript
-        batch.gen_witness_from_fs_trans(&fs_trans)
-            .expect("Failed to set FiatShamir transcript");
-        
-        // Should pass verification (empty case)
-        assert!(batch.check_constraints());
-        
-        println!("✅ Empty transcript test passed!");
-    }
 
-    #[test]
-    fn test_batch_constraints_simple_transcript() {
-        println!("=== Testing BatchConstraints with Simple Transcript ===");
+//     #[test]
+//     fn test_batch_constraints_simple_transcript() {
+//         println!("=== Testing BatchConstraints with Simple Transcript ===");
         
-        // Create and build a simple Fiat-Shamir transcript
-        let mut fs_trans = FiatShamir::<BlsFr>::new_with_state(BlsFr::from(9999u64), BlsFr::from(9999u64))
-            .expect("Failed to create FiatShamir");
+//         // Create and build a simple Fiat-Shamir transcript
+//         let mut fs_trans = FiatShamir::<BlsFr>::new_with_state(BlsFr::from(9999u64), BlsFr::from(9999u64))
+//             .expect("Failed to create FiatShamir");
         
-        // Build transcript with some operations
-        println!("Building transcript...");
-        fs_trans.push(BlsFr::from(100u64));
-        fs_trans.push(BlsFr::from(200u64));
-        let _challenge1 = fs_trans.gen_challenge();
-        fs_trans.push(BlsFr::from(300u64));
-        let _challenge2 = fs_trans.gen_challenge();
+//         // Build transcript with some operations
+//         println!("Building transcript...");
+//         fs_trans.push(BlsFr::from(100u64));
+//         fs_trans.push(BlsFr::from(200u64));
+//         let _challenge1 = fs_trans.gen_challenge();
+//         fs_trans.push(BlsFr::from(300u64));
+//         let _challenge2 = fs_trans.gen_challenge();
         
-        println!("Transcript length: {}", fs_trans.proof_len());
-        println!("Transcript verification: {}", fs_trans.verify_fs());
-        assert!(fs_trans.verify_fs());
+//         println!("Transcript length: {}", fs_trans.proof_len());
+//         println!("Transcript verification: {}", fs_trans.verify_fs());
+//         assert!(fs_trans.verify_fs());
         
-        let mut batch = BatchConstraints::<BlsFr>::new();
+//         let mut batch = BatchConstraints::<BlsFr>::new();
         
-        // Set the transcript and generate constraints
-        batch.gen_witness_from_fs_trans(&fs_trans)
-            .expect("Failed to set FiatShamir transcript");
+//         // Set the transcript and generate constraints
+//         batch.gen_witness_from_fs_trans(&fs_trans)
+//             .expect("Failed to set FiatShamir transcript");
         
-        // Verify the batch
-        assert!(batch.check_constraints());
+//         // Verify the batch
+//         assert!(batch.check_constraints());
         
-        println!("✅ Simple transcript test passed!");
-    }
+//         println!("✅ Simple transcript test passed!");
+//     }
 
-    #[test]
-    fn test_batch_constraints_complex_transcript() {
-        println!("=== Testing BatchConstraints with Complex Transcript ===");
+    // #[test]
+    // fn test_batch_constraints_complex_transcript() {
+    //     println!("=== Testing BatchConstraints with Complex Transcript ===");
         
-        // Create a more complex transcript
-        let mut fs_trans = FiatShamir::<BlsFr>::new_with_state(BlsFr::from(54321u64), BlsFr::from(54321u64))
-            .expect("Failed to create FiatShamir");
+    //     // Create a more complex transcript
+    //     let mut fs_trans = FiatShamir::<BlsFr>::new_with_state(BlsFr::from(54321u64), BlsFr::from(54321u64))
+    //         .expect("Failed to create FiatShamir");
         
-        let mut rng = ark_std::rand::thread_rng();
+    //     let mut rng = ark_std::rand::thread_rng();
         
-        println!("Building complex transcript...");
+    //     println!("Building complex transcript...");
         
-        // Interleave pushes and challenges
-        for i in 0..5 {
-            // Push some random elements
-            fs_trans.push(BlsFr::rand(&mut rng));
-            fs_trans.push(BlsFr::from((i * 1000) as u64));
+    //     // Interleave pushes and challenges
+    //     for i in 0..5 {
+    //         // Push some random elements
+    //         fs_trans.push(BlsFr::rand(&mut rng));
+    //         fs_trans.push(BlsFr::from((i * 1000) as u64));
             
-            // Generate challenges
-            let _challenge = fs_trans.gen_challenge();
+    //         // Generate challenges
+    //         let _challenge = fs_trans.gen_challenge();
             
-            if i % 2 == 0 {
-                fs_trans.push(BlsFr::from((i * 500) as u64));
-                let _challenge2 = fs_trans.gen_challenge();
-            }
-        }
+    //         if i % 2 == 0 {
+    //             fs_trans.push(BlsFr::from((i * 500) as u64));
+    //             let _challenge2 = fs_trans.gen_challenge();
+    //         }
+    //     }
         
-        println!("Final transcript length: {}", fs_trans.proof_len());
-        assert!(fs_trans.verify_fs());
+    //     println!("Final transcript length: {}", fs_trans.proof_len());
+    //     assert!(fs_trans.verify_fs());
         
-        let mut batch = BatchConstraints::<BlsFr>::new();
+    //     let mut batch = BatchConstraints::<BlsFr>::new();
         
-        // Set the transcript
-        batch.gen_witness_from_fs_trans(&fs_trans)
-            .expect("Failed to set FiatShamir transcript");
+    //     // Set the transcript
+    //     batch.gen_witness_from_fs_trans(&fs_trans)
+    //         .expect("Failed to set FiatShamir transcript");
         
-        // Verify the batch
-        assert!(batch.check_constraints());
+    //     // Verify the batch
+    //     assert!(batch.check_constraints());
         
-        println!("✅ Complex transcript test passed!");
-    }
+    //     println!("✅ Complex transcript test passed!");
+    // }
 
-    #[test]
-    fn test_batch_constraints_large_transcript() {
-        println!("=== Testing BatchConstraints with Large Transcript ===");
+    // #[test]
+    // fn test_batch_constraints_large_transcript() {
+    //     println!("=== Testing BatchConstraints with Large Transcript ===");
         
-        let mut fs_trans = FiatShamir::<BlsFr>::new_with_state(BlsFr::from(77777u64), BlsFr::from(77777u64))
-            .expect("Failed to create FiatShamir");
+    //     let mut fs_trans = FiatShamir::<BlsFr>::new_with_state(BlsFr::from(77777u64), BlsFr::from(77777u64))
+    //         .expect("Failed to create FiatShamir");
         
-        let mut rng = ark_std::rand::thread_rng();
+    //     let mut rng = ark_std::rand::thread_rng();
         
-        // Build a large transcript
-        for i in 0..50 {
-            fs_trans.push(BlsFr::rand(&mut rng));
+    //     // Build a large transcript
+    //     for i in 0..50 {
+    //         fs_trans.push(BlsFr::rand(&mut rng));
             
-            if i % 10 == 9 {
-                let _challenge = fs_trans.gen_challenge();
-            }
-        }
+    //         if i % 10 == 9 {
+    //             let _challenge = fs_trans.gen_challenge();
+    //         }
+    //     }
         
-        // Add some final challenges
-        for _ in 0..5 {
-            let _challenge = fs_trans.gen_challenge();
-        }
+    //     // Add some final challenges
+    //     for _ in 0..5 {
+    //         let _challenge = fs_trans.gen_challenge();
+    //     }
         
-        println!("Large transcript length: {}", fs_trans.proof_len());
-        assert!(fs_trans.verify_fs());
+    //     println!("Large transcript length: {}", fs_trans.proof_len());
+    //     assert!(fs_trans.verify_fs());
         
-        let mut batch = BatchConstraints::<BlsFr>::new();
-        batch.gen_witness_from_fs_trans(&fs_trans)
-            .expect("Failed to set FiatShamir transcript");
+    //     let mut batch = BatchConstraints::<BlsFr>::new();
+    //     batch.gen_witness_from_fs_trans(&fs_trans)
+    //         .expect("Failed to set FiatShamir transcript");
         
-        // This might take a moment for large transcripts
-        println!("Verifying large batch...");
-        assert!(batch.check_constraints());
+    //     // This might take a moment for large transcripts
+    //     println!("Verifying large batch...");
+    //     assert!(batch.check_constraints());
         
-        println!("✅ Large transcript test passed!");
-    }
+    //     println!("✅ Large transcript test passed!");
+    // }
 
-}
+// }

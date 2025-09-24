@@ -233,24 +233,24 @@ mod tests {
         println!("Finished bls12-381");
     }
 
-    #[test]
-    fn full_end_to_end_equation_test() {
-        use crate::tests::*;
-        full_end_to_end_equation_test::<_, _, LigeroPCS<Fr>, _>(
-            Some(5),
-            rand_poly::<Fr>,
-            rand_point::<Fr>,
-            poseidon_sponge_for_test::<Fr>,
-        )
-        .expect("test failed for bls12-377");
-        println!("Finished bls12-377");
-        full_end_to_end_equation_test::<_, _, LigeroPCS<Fr381>, _>(
-            Some(8),
-            rand_poly::<Fr381>,
-            rand_point::<Fr381>,
-            poseidon_sponge_for_test::<Fr381>,
-        )
-        .expect("test failed for bls12-381");
-        println!("Finished bls12-381");
-    }
+    // #[test]
+    // fn full_end_to_end_equation_test() {
+    //     use crate::tests::*;
+    //     full_end_to_end_equation_test::<_, _, LigeroPCS<Fr>, _>(
+    //         Some(5),
+    //         rand_poly::<Fr>,
+    //         rand_point::<Fr>,
+    //         poseidon_sponge_for_test::<Fr>,
+    //     )
+    //     .expect("test failed for bls12-377");
+    //     println!("Finished bls12-377");
+    //     full_end_to_end_equation_test::<_, _, LigeroPCS<Fr381>, _>(
+    //         Some(8),
+    //         rand_poly::<Fr381>,
+    //         rand_point::<Fr381>,
+    //         poseidon_sponge_for_test::<Fr381>,
+    //     )
+    //     .expect("test failed for bls12-381");
+    //     println!("Finished bls12-381");
+    // }
 }

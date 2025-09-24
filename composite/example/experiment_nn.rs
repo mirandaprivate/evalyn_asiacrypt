@@ -1,4 +1,4 @@
-use std::fs::{self, File};
+use std::fs;
 use std::io::{self, Write};
 
 use std::sync::{Arc, Mutex};
@@ -13,8 +13,6 @@ const DEPTH: usize = 16;
 const SHAPE: (usize, usize) = (1024, 1024);
 
 fn main() -> io::Result<()> {
-    init_log(true)?; 
-
     run_with_monitor(
         |iter| experiment_nn(iter),
         Duration::from_secs(60),      // total duration
@@ -83,10 +81,10 @@ where
     let start = Instant::now();
     // Print thread information once
     match std::env::var("RAYON_NUM_THREADS") {
-        Ok(v) => { let _ = log_line(&format!("RAYON_NUM_THREADS: {}", v)); },
+        Ok(v) => println!("RAYON_NUM_THREADS: {}", v),
         Err(_) => {
             let inferred = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1);
-            let _ = log_line(&format!("RAYON_NUM_THREADS (unset, inferred): {}", inferred));
+            println!("RAYON_NUM_THREADS (unset, inferred): {}", inferred);
         }
     }
     let mut last_report = Instant::now(); // Not used, kept for structure
@@ -98,39 +96,16 @@ where
         iter += 1;
     }
     let peak_kb = *max_memory.lock().unwrap();
-    log_line(&format!("⬜ \x1b[1m Peak RAM Usage: {}KB \x1b[0m", peak_kb))?;
+    println!("⬜ \x1b[1m Peak RAM Usage: {}KB \x1b[0m", peak_kb);
     Ok(())
 }
 
-// =============== Logging helpers ===============
-use std::sync::OnceLock;
-static LOG_FILE: OnceLock<Mutex<File>> = OnceLock::new();
-
-fn init_log(append: bool) -> io::Result<()> {
-    // Always write to the `example` directory under the composite crate: <crate_root>/example/experiment.log
-    // Use compile-time env var to ensure independence from the working directory
-    let path = format!("{}/example/experiment.log", env!("CARGO_MANIFEST_DIR"));
-    let file = if append { File::options().create(true).append(true).open(&path)? } else { File::create(&path)? };
-    LOG_FILE.get_or_init(|| Mutex::new(file));
-    log_line(&format!("[log] writing to {}", path)).ok();
-    Ok(())
-}
-
-fn log_line(line: &str) -> io::Result<()> {
-    if let Some(m) = LOG_FILE.get() {
-        if let Ok(mut f) = m.lock() {
-            writeln!(f, "{}", line)?;
-            f.flush()?;
-        }
-    }
-    println!("{}", line); // Still print to stdout
-    Ok(())
-}
+// =============== Memory monitoring helpers ===============
 
 fn get_memory_usage() -> Option<u64> {
-    // Print '⌛' to stdout every 30 seconds as a heartbeat (not written to the log file)
-    use std::sync::OnceLock as _OnceLock; // Use OnceLock to avoid naming conflict with LOG_FILE
-    static LAST_EQ: _OnceLock<Mutex<Instant>> = _OnceLock::new();
+    // Print '⌛' to stdout every 30 seconds as a heartbeat
+    use std::sync::OnceLock;
+    static LAST_EQ: OnceLock<Mutex<Instant>> = OnceLock::new();
     if let Ok(mut t) = LAST_EQ.get_or_init(|| Mutex::new(Instant::now())).lock() {
         if t.elapsed() >= Duration::from_secs(30) {
             print!("⌛");
