@@ -398,12 +398,10 @@ mod tests {
         println!("  Padded witness length: {}", padded_witness.len());
         println!("  Matrix dimensions: {} x {}", rows_a, cols_a);
         
-        // 关键验证：见证向量长度应该等于矩阵列数
         assert_eq!(padded_witness.len(), cols_a, 
                    "Padded witness length ({}) must equal matrix columns ({})", 
                    padded_witness.len(), cols_a);
         
-        // 验证都是2的幂
         assert!(padded_witness.len().is_power_of_two(), "Witness length should be power of 2");
         assert!(cols_a.is_power_of_two(), "Matrix columns should be power of 2");
         assert!(rows_a.is_power_of_two(), "Matrix rows should be power of 2");

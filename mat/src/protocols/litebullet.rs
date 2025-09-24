@@ -47,7 +47,7 @@ where
         tilde_v: F,
     ) -> (G, G, F, F, Vec<F>, Vec<F>)
     {
-        println!("LiteBullet.reduce_prover: 推送 v_com={:?}, length={}", self.v_com, self.length);
+        println!("LiteBullet.reduce_prover: Push v_com={:?}, length={}", self.v_com, self.length);
         zk_trans_seq.push_com(self.v_com);
         zk_trans_seq.push_size(self.length);
   
@@ -175,16 +175,15 @@ where
         let mut challenges: Vec<F> = Vec::new();
         let mut challenges_inv: Vec<F> = Vec::new();
 
-        let mut flag = true; // 默认设为true，只有在检测到错误时才改为false
+        let mut flag = true; 
 
         let pointer_old = trans_seq.pointer;
         
-        println!("LiteBullet验证: pointer={}, 预期commitments {:?} and size {}", 
+        println!("LiteBullet verification: pointer={}, expected commitments {:?} and size {}", 
                  pointer_old, self.v_com, self.length);
         
-        // 确保不会越界访问transcript
         if pointer_old + 1 >= trans_seq.data.len() {
-            println!("!! Invalid transcript when verifying LiteBullet: 指针超出范围 {} (需要至少{}个元素)",
+            println!("!! Invalid transcript when verifying LiteBullet: pointer out of range {} (need at least {} elements)",
                      pointer_old, pointer_old + 2);
             return (false, a_reduce_blind, b_reduce_blind, challenges_inv, challenges);
         }
@@ -192,17 +191,16 @@ where
         let first_elem = trans_seq.data[pointer_old].clone();
         let second_elem = trans_seq.data[pointer_old + 1].clone();
         
-        println!("LiteBullet验证: transcript首元素 {:?}, 第二元素 {:?}", 
+        println!("LiteBullet verification: first transcript element {:?}, second element {:?}", 
                  first_elem, second_elem);
         
-        // 在这里明确指定类型以解决类型推断问题
         let expected_v_com = TranElem::<F, G>::Group(self.v_com);
         let expected_size = TranElem::<F, G>::Size(self.length);
         
         if (expected_v_com.clone(), expected_size.clone()) != (first_elem.clone(), second_elem.clone()) {
             println!("!! Invalid public input when verifying LiteBullet");
-            println!("预期: {:?}, 获取到: {:?}", expected_v_com, first_elem);
-            println!("预期: {:?}, 获取到: {:?}", expected_size, second_elem);
+            println!("Expected: {:?}, got: {:?}", expected_v_com, first_elem);
+            println!("Expected: {:?}, got: {:?}", expected_size, second_elem);
             flag = false;
         } 
 
@@ -210,22 +208,19 @@ where
         let n = self.length;
         let log_n = (n as u64).ilog2() as usize;
         
-        println!("LiteBullet验证: length={}, log_n={}", n, log_n);
+        println!("LiteBullet verification: length={}, log_n={}", n, log_n);
 
-        // 预先计算需要移动指针的距离，但检查是否会超出边界
         let expected_pointer = pointer_old + 3 * log_n + 4;
         if expected_pointer > trans_seq.data.len() {
-            println!("!! Invalid transcript when verifying LiteBullet: 预期指针({})超出范围({})",
+            println!("!! Invalid transcript when verifying LiteBullet: expected pointer ({}) out of range ({})",
                      expected_pointer, trans_seq.data.len());
             flag = false;
         }
         
-        // 如果之前的检查已经失败，提前返回
         if !flag {
             return (flag, a_reduce_blind, b_reduce_blind, challenges_inv, challenges);
         }
 
-        // 只有验证通过时才设置指针
         trans_seq.pointer = pointer_old + 2;
         
         let mut current_pointer = trans_seq.pointer;
@@ -233,11 +228,10 @@ where
         
 
         for i in 0..log_n {
-            println!("LiteBullet验证: 迭代{}/{}, current_pointer={}", i+1, log_n, current_pointer);
+            println!("LiteBullet verification: iteration {}/{}, current_pointer={}", i+1, log_n, current_pointer);
             
-            // 检查是否有足够的元素
             if current_pointer + 2 >= trans_seq.data.len() {
-                println!("!! Invalid transcript when verifying LiteBullet: 指针{}超出范围({})",
+                println!("!! Invalid transcript when verifying LiteBullet: pointer {} out of range ({})",
                          current_pointer + 2, trans_seq.data.len());
                 flag = false;
                 break;
@@ -256,13 +250,13 @@ where
                 lhs = lhs + l_tr.mul(x_j) + r_tr.mul(x_j_inv);
                 challenges.push(x_j);
                 challenges_inv.push(x_j_inv);
-                println!("LiteBullet验证: 成功读取挑战值(l_tr, r_tr, x_j)"); 
+                println!("LiteBullet verification: Successfully read challenge value (l_tr, r_tr, x_j)"); 
 
             } else {
-                println!("!! Invalid transcript when verifying LiteBullet: 错误的元素类型");
-                println!("当前位置{}的元素: {:?}", current_pointer, trans_seq.data[current_pointer]);
-                println!("当前位置{}的元素: {:?}", current_pointer+1, trans_seq.data[current_pointer+1]);
-                println!("当前位置{}的元素: {:?}", current_pointer+2, trans_seq.data[current_pointer+2]);
+                println!("!! Invalid transcript when verifying LiteBullet: wrong element type");
+                println!("Element at position {}: {:?}", current_pointer, trans_seq.data[current_pointer]);
+                println!("Element at position {}: {:?}", current_pointer+1, trans_seq.data[current_pointer+1]);
+                println!("Element at position {}: {:?}", current_pointer+2, trans_seq.data[current_pointer+2]);
                 flag = false;
                 break;
             }
@@ -270,14 +264,14 @@ where
             current_pointer += 3;
         }
         
-        // 如果之前的验证失败，提前返回
+        // If previous verification failed, return early
         if !flag {
             return (flag, a_reduce_blind, b_reduce_blind, challenges_inv, challenges);
         }
         
-        // 检查是否有足够的元素
+        // Check if there are enough elements
         if current_pointer + 1 >= trans_seq.data.len() {
-            println!("!! Invalid transcript when verifying LiteBullet: 最终指针{}超出范围({})",
+            println!("!! Invalid transcript when verifying LiteBullet: final pointer {} out of range ({})",
                      current_pointer + 1, trans_seq.data.len());
             flag = false;
             return (flag, a_reduce_blind, b_reduce_blind, challenges_inv, challenges);
@@ -290,7 +284,7 @@ where
             trans_seq.data[current_pointer].clone(),
             trans_seq.data[current_pointer+1].clone(),
         ) {
-            println!("LiteBullet验证: 成功读取a_reduce_com和b_reduce_com");
+            println!("LiteBullet verification: Successfully read a_reduce_com and b_reduce_com");
             trans_seq.pointer = current_pointer + 2;
 
             let zk_mul = ZkMulScalar::new(
@@ -300,7 +294,7 @@ where
                 b_reduce_com,
             );
     
-            println!("LiteBullet验证: 调用ZkMulScalar.verify_as_subprotocol");
+            println!("LiteBullet verification: Calling ZkMulScalar.verify_as_subprotocol");
             let check = zk_mul.verify_as_subprotocol(
                 trans_seq,
             );
@@ -309,20 +303,20 @@ where
                 println!("!! ZkMulScalar verification failed");
                 flag = false;
             } else {
-                println!("LiteBullet验证: ZkMulScalar验证成功");
+                println!("LiteBullet verification: ZkMulScalar verification succeeded");
             }
             
             a_reduce_blind = a_reduce_com;
             b_reduce_blind = b_reduce_com;
 
         } else {
-            println!("!! Invalid transcript when verifying LiteBullet: 预期的a_reduce_com和b_reduce_com不匹配");
-            println!("当前位置{}的元素: {:?}", current_pointer, trans_seq.data[current_pointer]);
-            println!("当前位置{}的元素: {:?}", current_pointer+1, trans_seq.data[current_pointer+1]);
+            println!("!! Invalid transcript when verifying LiteBullet: expected a_reduce_com and b_reduce_com do not match");
+            println!("Element at position {}: {:?}", current_pointer, trans_seq.data[current_pointer]);
+            println!("Element at position {}: {:?}", current_pointer+1, trans_seq.data[current_pointer+1]);
             flag = false;
         }
         
-        println!("LiteBullet验证结束: flag={}, challenges_inv.len()={}, challenges.len()={}",
+        println!("LiteBullet verification finished: flag={}, challenges_inv.len()={}, challenges.len()={}",
                  flag, challenges_inv.len(), challenges.len());
     
         (flag, a_reduce_blind, b_reduce_blind, challenges_inv, challenges)

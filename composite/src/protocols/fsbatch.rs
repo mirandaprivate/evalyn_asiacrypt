@@ -117,8 +117,8 @@ where
         pcsrs: &PcsPP<E>
     ) -> PairingOutput<E> {
         let (a_mat, b_mat, c_mat) = self.r1cs_prover_input.gen_r1cs_constraints();
-    // In column-major order (data is already a collection of column vectors),
-    // directly concatenate the columns of the three matrices, then pad with the c matrix again (a||b||c||c).
+        // In column-major order (data is already a collection of column vectors),
+        // directly concatenate the columns of the three matrices, then pad with the c matrix again (a||b||c||c).
         let mut r1cs_mat_concat = a_mat.to_vec();
         r1cs_mat_concat.extend(b_mat.to_vec());
         r1cs_mat_concat.extend(c_mat.to_vec());
@@ -151,7 +151,7 @@ where
         let fs_trans = trans.fs.clone();
         self.r1cs_prover_input.prepare_from_transcript(&fs_trans);
 
-    // Obtain the original witness in column-major order (collection of column vectors)
+        // Obtain the original witness in column-major order (collection of column vectors)
         let mut witness = self.r1cs_prover_input.witness_mat.data.clone();
         if !witness.is_empty() {
             let rows = witness[0].len();
@@ -169,7 +169,7 @@ where
             }
         }
 
-    // Debug info and dimension check (to avoid panic inside SmartPC::commit_full)
+        // Debug info and dimension check (to avoid panic inside SmartPC::commit_full)
         let w_n = witness.len();
         let w_m = if w_n > 0 { witness[0].len() } else { 0 };
         println!("[FSBatch::commit_to_transcript] witness dims n={}, m={}, q={} (qlog≈{:.0})", w_n, w_m, pcsrs.q, (pcsrs.q as f64).log2());
@@ -183,7 +183,7 @@ where
         let proof_vec_raw = trans.get_fs_proof_vec();
         let state_vec_raw = trans.get_fs_state_vec();
 
-    // Compute padding length up to next power of two
+        // Compute padding length up to next power of two
         fn next_pow2_u(x: usize) -> usize { if x <= 1 { x } else { x.next_power_of_two() } }
         let target_pv = next_pow2_u(proof_vec_raw.len());
         let target_sv = next_pow2_u(state_vec_raw.len());
@@ -202,16 +202,16 @@ where
             state_vec.resize(target_sv, E::ScalarField::zero());
             state_vec_shift.resize(target_sv, E::ScalarField::zero());
         }
-    // if target_pv != proof_vec_raw.len() { println!("[FSBatch::commit_to_transcript] pad proof_vec {} -> {}", proof_vec_raw.len(), target_pv); }
-    // if target_sv != state_vec_raw.len() { println!("[FSBatch::commit_to_transcript] pad state_vec {} -> {}", state_vec_raw.len(), target_sv); }
+        // if target_pv != proof_vec_raw.len() { println!("[FSBatch::commit_to_transcript] pad proof_vec {} -> {}", proof_vec_raw.len(), target_pv); }
+        // if target_sv != state_vec_raw.len() { println!("[FSBatch::commit_to_transcript] pad state_vec {} -> {}", state_vec_raw.len(), target_sv); }
 
-    // Dimension check (after padding)
+        // Dimension check (after padding)
         println!("[FSBatch::commit_to_transcript] proof_vec len={}, state_vec len={}, q={} ", proof_vec.len(), state_vec.len(), pcsrs.q);
         if proof_vec.len() > pcsrs.q || state_vec.len() > pcsrs.q {
             panic!("Padded proof/state len exceed q (pv={}, sv={}, q={})", proof_vec.len(), state_vec.len(), pcsrs.q);
         }
 
-    // Update proof_len: use the fully padded length of proof_vec
+        // Update proof_len: use the fully padded length of proof_vec
         self.proof_len = proof_vec.len();
         self.proof_vec = proof_vec.clone();
         self.state_vec = state_vec.clone();
@@ -488,11 +488,11 @@ where
         // // END DEBUG
 
 
-    // Witness uses column-major data directly (consistent with commit_to_transcript)
+        // Witness uses column-major data directly (consistent with commit_to_transcript)
         let witness_formatted: Vec<Vec<E::ScalarField>> = self.r1cs_prover_input.witness_mat.data.clone();
 
 
-    // Use the zkSMART open algorithm to prove the projection of w and (a || b || c || c)
+        // Use the zkSMART open algorithm to prove the projection of w and (a || b || c || c)
         let hat_r1cs_com = pcsrs.u * r1cs_hat;
         let pcs_trans_1_result = SmartPC::<E>::open_square (
             pcsrs,
@@ -708,7 +708,7 @@ where
         );
         batch_points.verify(&mut self.reduce_trans);
         
-    // BatchPoint uses a different atomic_pop structure; access fields directly
+        // BatchPoint uses a different atomic_pop structure; access fields directly
         let hat_w = batch_points.atomic_pop.c_hat;
         let point_w = batch_points.atomic_pop.c_point.clone();
         let _hat_w_index = batch_points.atomic_pop.mapping.c_hat_index;
@@ -723,7 +723,7 @@ where
             vec![a_point_index, b_point_index, c_point_index_final.clone(), c_point_index_final],
         );
         batch_proj.verify(&mut self.reduce_trans);
-    // BatchProjField also uses a different atomic_pop structure; access fields directly
+        // BatchProjField also uses a different atomic_pop structure; access fields directly
         let r1cs_hat = batch_proj.atomic_pop.c_hat;
         let r1cs_point = batch_proj.atomic_pop.c_point.clone();
         let _r1cs_hat_index = batch_proj.atomic_pop.mapping.c_hat_index;
@@ -734,7 +734,7 @@ where
         let hat_r1cs_com = pcsrs.u * r1cs_hat;
 
 
-    // Use the zkSMART open algorithm to prove the projection of w and (a || b || c)
+        // Use the zkSMART open algorithm to prove the projection of w and (a || b || c)
         let flag1 = SmartPC::<E>::verify_square (
             pcsrs,
             self.r1cs_mats_commit,

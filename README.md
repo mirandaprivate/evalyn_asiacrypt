@@ -167,7 +167,4 @@ at your option.
 
 If you use this codebase in academic work, please cite the paper:
 
-Scalable zkSNARKs for Matrix Computations: A Generic Framework for Verifiable Deep Learning
-
-
-An appropriate BibTeX entry can be added here when available.
+Mingshu Cong, Sherman S. M. Chow, Siu Ming Yiu, and Tsz Hon Yuen. Scalable zkSNARKs for Matrix Computations: A Generic Framework for Verifiable Deep Learning. To appear in Asiacrypt 2025 <https://eprint.iacr.org/2025/1646>

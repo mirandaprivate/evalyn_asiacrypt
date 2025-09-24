@@ -433,7 +433,7 @@ impl<F: PrimeField + UniformRand + Absorb + CanonicalSerialize + CanonicalDeseri
         let b_hat_index = self.litebullet.atomic_pop.mapping.hat_b_index;
         let b_point_index = self.litebullet.atomic_pop.mapping.point_b_index.0.clone();
 
-        // 使用公共输入引用（transcript 中对应位置作为公共输入）
+        // public input reference
         let hat_inputs_exprs = hat_inputs_index.iter()
             .map(|hat| {
                 ArithmeticExpression::pub_input(*hat)
@@ -598,7 +598,6 @@ mod tests {
         let shape = (2, 2);
 
         let (mats, points, hats) = make_mats_and_inputs(num_mats, shape);
-    // 索引：这里使用自然顺序
         let hat_indices: Vec<usize> = (0..hats.len()).collect();
         let point_indices = vec![ (vec![0], vec![0]); num_mats];
         let mut protocol = BatchProjField::<BlsFr>::new(hats.clone(), points.clone(), hat_indices, point_indices);

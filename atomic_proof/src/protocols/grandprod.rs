@@ -916,7 +916,6 @@ mod tests {
         let peak_kb = *max_memory.lock().unwrap();
         println!("====Peak RSS (approx): {} KB", peak_kb);
 
-        // 仅在存在时打印 RAYON_NUM_THREADS，避免噪声；否则显示推断线程数
         match std::env::var("RAYON_NUM_THREADS") {
             Ok(value) => println!("RAYON_NUM_THREADS: {}", value),
             Err(_) => {

@@ -252,7 +252,6 @@ mod tests {
 
         let mut rng = create_rng();
 
-        // 使用 BLS12-381 专用方法
         let (pk, vk) = Groth16Prover::setup_bls12_381(&builder, &mut rng)
             .expect("Failed to generate keys");
 
@@ -279,7 +278,7 @@ mod tests {
         // Build constraint: (p0 + w0) * w1 - p1 = 0
         use super::super::arithmetic_expression::ArithmeticExpression as AE;
         let mut builder = ConstraintSystemBuilder::new();
-        // IMPORTANT: setup 阶段需要已经知道 public inputs 数量，否则 generate_constraints 会返回 Unsatisfiable
+
         builder.set_public_inputs(pub_inputs.clone())
             .set_private_inputs(pri_inputs.clone());
         let expr = (AE::pub_input(0) + AE::pri_input(0)) * AE::pri_input(1) - AE::pub_input(1);
@@ -580,7 +579,7 @@ mod tests {
 
     #[test]
     fn test_groth16_equal_vec_constraint() {
-        // 测试 equal_vec: [a, b] == [c, d] => a == c && b == d
+        // test equal_vec: [a, b] == [c, d] => a == c && b == d
         let inputs = vec![
             BlsFr::from(5u64),  // x0 = 5
             BlsFr::from(7u64),  // x1 = 7
@@ -619,7 +618,7 @@ mod tests {
 
     #[test]
     fn test_groth16_equal_vec_constraint_invalid() {
-        // 测试 equal_vec 失效情况: [a, b] != [c, d]
+        // test equal_vec failure scenario: [a, b] != [c, d]
         let inputs = vec![
             BlsFr::from(5u64),  // x0 = 5
             BlsFr::from(7u64),  // x1 = 7
@@ -646,7 +645,7 @@ mod tests {
 
     #[test]
     fn test_groth16_mul_vec_constraint() {
-        // 测试 mul_vec: [a, b] * [c, d] = [e, f] => a*c = e && b*d = f
+        // test mul_vec: [a, b] * [c, d] = [e, f] => a*c = e && b*d = f
         let inputs = vec![
             BlsFr::from(3u64),  // x0 = 3
             BlsFr::from(4u64),  // x1 = 4
@@ -688,7 +687,7 @@ mod tests {
 
     #[test]
     fn test_groth16_mul_vec_constraint_with_constants() {
-        // 测试 mul_vec 包含常数的情况
+        // test mul_vec contains constants
         let inputs = vec![
             BlsFr::from(2u64),  // x0 = 2
             BlsFr::from(3u64),  // x1 = 3
@@ -730,7 +729,7 @@ mod tests {
 
     #[test]
     fn test_groth16_inv_vec_constraint() {
-        // 测试 inv_vec: 对于向量 [a, b]，其逆向量为 [1/a, 1/b]
+        // test inv_vec: for [a, b]，with inverse [1/a, 1/b]
         let a = BlsFr::from(4u64);
         let b = BlsFr::from(5u64);
         let inv_a = a.inverse().unwrap(); // 1/4
@@ -769,7 +768,7 @@ mod tests {
 
     #[test]
     fn test_groth16_inv_vec_constraint_single_element() {
-        // 测试单元素的 inv_vec
+        // test single element inv_vec
         let a = BlsFr::from(7u64);
         let inv_a = a.inverse().unwrap(); // 1/7
         
@@ -805,7 +804,7 @@ mod tests {
 
     #[test]
     fn test_groth16_combined_vec_constraints() {
-        // 测试组合的向量约束
+        // test conbined vector constraints
         let inputs = vec![
             BlsFr::from(2u64),  // x0 = 2
             BlsFr::from(3u64),  // x1 = 3
@@ -852,7 +851,7 @@ mod tests {
 
     #[test]
     fn test_groth16_empty_vec_constraints() {
-        // 测试空向量约束（边界情况）
+        // test empty vector constraints（border scenario）
         let inputs = vec![BlsFr::from(1u64)]; // Just a dummy input
         let mut builder = ConstraintSystemBuilder::new();
     builder.set_public_inputs(inputs.clone());

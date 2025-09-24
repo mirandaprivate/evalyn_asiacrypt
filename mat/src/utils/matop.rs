@@ -17,7 +17,7 @@ where
 
         let (m, n) = self.shape;
         
-        // 按列并行计算矩阵加法
+        // Parallel matrix addition by columns
         let result_data: Vec<Vec<F>> = (0..n).into_par_iter().map(|j| {
             let mut col = Vec::with_capacity(m);
             for i in 0..m {
@@ -38,7 +38,7 @@ where
 
         let (m, n) = self.shape;
         
-        // 按列并行计算矩阵减法
+        // Parallel matrix subtraction by columns
         let result_data: Vec<Vec<F>> = (0..n).into_par_iter().map(|j| {
             let mut col = Vec::with_capacity(m);
             for i in 0..m {
@@ -82,7 +82,7 @@ where
 
         let (m, n) = self.shape;
         
-        // 按列并行计算 Hadamard 乘积
+        // Parallel computation of Hadamard product by columns
         let result_data: Vec<Vec<F>> = (0..n).into_par_iter().map(|j| {
             let mut col = Vec::with_capacity(m);
             for i in 0..m {
@@ -125,7 +125,7 @@ where
         }).collect();
 
         DenseMatFieldCM {
-            shape: (n, m), // 转置后的形状
+            shape: (n, m), // Shape after transposition
             data: result_data,
         }
     }
@@ -194,7 +194,7 @@ where
             panic!("Vector dimension {} does not match matrix rows {}", vec.len(), m);
         }
 
-        // 按列并行计算向量-矩阵乘法
+        // Parallel vector-matrix multiplication by columns
         (0..n).into_par_iter().map(|j| {
             let mut sum = F::zero();
             for i in 0..m {

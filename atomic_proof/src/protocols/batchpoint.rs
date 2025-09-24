@@ -227,8 +227,8 @@ impl<F: PrimeField + UniformRand + Absorb + CanonicalSerialize + CanonicalDeseri
         Self::new(
             vec![F::zero()],                // hat_inputs
             vec![(Vec::new(), Vec::new())], // point_inputs
-            vec![0],                        // hat_inputs_index 占位
-            vec![(Vec::new(), Vec::new())], // point_inputs_index 占位
+            vec![0],                        // hat_inputs_index placeholder
+            vec![(Vec::new(), Vec::new())], // point_inputs_index placeholder
         )
     }
 

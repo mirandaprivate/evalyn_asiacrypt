@@ -192,7 +192,6 @@ where
             panic!("The length of the right challenge is not enough");
         }
 
-        // 使用 Vec<Mutex<F>> 为每个结果元素单独加锁
         let result: Vec<std::sync::Mutex<F>> = (0..m).map(|_| std::sync::Mutex::new(F::zero())).collect();
 
         self.data.par_iter().for_each(|entry| {
@@ -207,7 +206,6 @@ where
             }
         });
 
-        // 提取最终结果
         result.into_iter()
             .map(|mutex_elem| mutex_elem.into_inner().unwrap())
             .collect()
@@ -2015,7 +2013,6 @@ where
             panic!("The length of the right challenge is not enough");
         }
 
-        // 使用 Vec<Mutex<F>> 为每个结果元素单独加锁
         let result: Vec<std::sync::Mutex<F>> = (0..m).map(|_| std::sync::Mutex::new(F::zero())).collect();
 
         self.data.par_iter().for_each(|entry| {
@@ -2030,7 +2027,6 @@ where
             }
         });
 
-        // 提取最终结果
         result.into_iter()
             .map(|mutex_elem| mutex_elem.into_inner().unwrap())
             .collect()
@@ -2073,13 +2069,13 @@ where
 
     fn gen_rand(&mut self, _: usize) {
         let m = self.shape.0;
-        let n = self.shape.1; // 改为 usize 而不是 MyInt
+        let n = self.shape.1; 
 
         let data = (0..m).into_par_iter().map(|_|{
             use rand::Rng;
             let mut rng = rand::rng();
-            let col = rng.random_range(0..n); // col 现在是 usize
-            (col, rng.random_range(0..n), I::from_myint(1)) // 返回 (usize, usize, I)
+            let col = rng.random_range(0..n);
+            (col, rng.random_range(0..n), I::from_myint(1))
         }).collect();
 
         self.set_data(data);
@@ -2633,15 +2629,14 @@ mod tests {
 
         assert_eq!(vec_a_clamp, vec_clamp_check);
 
-                // ==============================================
-        // 添加 SparseMat 测试
+        // ==============================================
+        // test SparseMat
         // ==============================================
         println!("=== Testing SparseMat Operations ===");
 
-        // 创建 SparseMat (16x32 = power of 2 dimensions)
+       
         let mut mat_sparse = SparseMat::<MyInt, Fr>::new(16, 32);
 
-        // 手动添加一些测试数据
         let test_data = vec![
             (0, 0, 1),   (0, 5, 3),   (1, 2, -2),
             (2, 7, 4),   (3, 1, -1),  (5, 10, 2),
@@ -2650,13 +2645,11 @@ mod tests {
         ];
         mat_sparse.set_data(test_data);
 
-        // 转换为密集矩阵用于对比
         let dense_sparse = mat_sparse.to_dense();
 
         println!("SparseMat shape: {:?}", mat_sparse.get_shape());
         println!("SparseMat non-zero entries: {}", mat_sparse.data.len());
 
-        // 测试向量转换
         let sparse_vec = mat_sparse.to_vec();
         let dense_vec = dense_sparse.to_vec();
         assert_eq!(sparse_vec, dense_vec, "Vector conversion failed");
@@ -2665,11 +2658,9 @@ mod tests {
         let dense_field_vec = dense_sparse.to_field_vec();
         assert_eq!(sparse_field_vec, dense_field_vec, "Field vector conversion failed");
 
-        // 生成测试向量
         let xl_sparse: Vec<Fr> = (0..4).map(|_| Fr::rand(rng)).collect(); // log2(16) = 4
         let xr_sparse: Vec<Fr> = (0..5).map(|_| Fr::rand(rng)).collect(); // log2(32) = 5
 
-        // 测试左投影
         let la1_sparse = mat_sparse.proj_left_challenges(&xl_sparse);
         let la2_sparse = dense_sparse.proj_left_challenges(&xl_sparse);
         assert_eq!(la1_sparse, la2_sparse, "Left challenges projection failed");
@@ -2678,7 +2669,6 @@ mod tests {
         let la3_sparse = mat_sparse.proj_left(&xi_l_sparse);
         assert_eq!(la1_sparse, la3_sparse, "Left projection consistency failed");
 
-        // 测试右投影
         let ar1_sparse = mat_sparse.proj_right_challenges(&xr_sparse);
         let ar2_sparse = dense_sparse.proj_right_challenges(&xr_sparse);
         assert_eq!(ar1_sparse, ar2_sparse, "Right challenges projection failed");
@@ -2687,23 +2677,19 @@ mod tests {
         let ar3_sparse = mat_sparse.proj_right(&xi_r_sparse);
         assert_eq!(ar1_sparse, ar3_sparse, "Right projection consistency failed");
 
-        // 测试双侧投影
         let v1_sparse = mat_sparse.proj_lr(&xl_sparse, &xr_sparse);
         let v2_sparse = dense_sparse.proj_lr(&xl_sparse, &xr_sparse);
         assert_eq!(v1_sparse, v2_sparse, "LR projection failed");
 
-        // 测试标量乘法
         let scalar = Fr::from(3u64);
         let scaled_sparse = mat_sparse.scalar_mul(scalar);
         let scaled_dense = dense_sparse.scalar_mul(scalar);
         assert_eq!(scaled_sparse, scaled_dense, "Scalar multiplication failed");
 
-        // 测试布尔否定
         let bool_neg_sparse = mat_sparse.to_bool_neg();
         let bool_neg_dense = dense_sparse.to_bool_neg();
         assert_eq!(bool_neg_sparse.to_vec(), bool_neg_dense.to_vec(), "Boolean negation failed");
 
-        // 测试位分解
         let (sign_sparse, abs_sparse, bit_sparse) = mat_sparse.bit_decomposition(4);
         let (sign_dense, abs_dense, bit_dense) = dense_sparse.bit_decomposition(4);
         
@@ -2713,12 +2699,10 @@ mod tests {
             assert_eq!(bit_s.to_vec(), bit_d.to_vec(), "Bit decomposition {} failed", i);
         }
 
-        // 测试截断
         let clamped_sparse = mat_sparse.clamp(2);
         let clamped_dense = dense_sparse.clamp(2);
         assert_eq!(clamped_sparse.to_vec(), clamped_dense.to_vec(), "Clamp operation failed");
 
-        // 测试清空操作
         let mut test_sparse = mat_sparse.clone();
         test_sparse.clear();
         assert_eq!(test_sparse.data.len(), 0, "Clear operation failed");

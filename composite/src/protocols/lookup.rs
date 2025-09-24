@@ -1316,7 +1316,7 @@ mod tests {
         // === New: test synthesize_atomic_pop_constraints ===
         use atomic_proof::pop::arithmetic_expression::ConstraintSystemBuilder;
         let mut cs_builder = ConstraintSystemBuilder::<Fr>::new();
-        // 将 transcript 序列值作为私有输入（ArithmeticExpression::input 对应 transcript 顺序索引）。
+        // Use the transcript sequence value as a private input (ArithmeticExpression::input corresponds to the transcript sequence index)
         let pri_inputs_lookup = trans.get_trans_seq();
         cs_builder.set_public_inputs(Vec::new());
         cs_builder.set_private_inputs(pri_inputs_lookup.clone());
@@ -1332,10 +1332,9 @@ mod tests {
             use ark_std::rand::rngs::StdRng;
             use ark_std::rand::SeedableRng;
 
-            let mut builder_all_pub = cs_builder.clone(); // 已含私有输入
+            let mut builder_all_pub = cs_builder.clone(); // contain private input
             builder_all_pub.set_public_inputs(Vec::new());
 
-            // 约束自检
             if let Err(e) = builder_all_pub.validate_constraints() {
                 // Debug: dump first 20 constraints and the problematic index mentioned in error string
                 println!("DEBUG Lookup constraint dump (first 20): pub_len={} pri_len={} total_constraints={}",
