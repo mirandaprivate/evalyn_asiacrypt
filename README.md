@@ -19,6 +19,8 @@ RAYON_NUM_THREADS=8 cargo run --release -p composite --example experiment_nn
 cargo test --workspace --release
 ```
 
+> Note for Windows users: It is recommended to run the above commands inside WSL (Windows Subsystem for Linux).
+
 ### Configuration Options
 - **Fast Demo (depth=16)**: ~5 minutes runtime (with 8 threads), ~4GB peak RAM usage
 - **Paper Results (depth=1024)**: ~35-37 minutes runtime (with 64 threads), ~103GB peak RAM usage (requires code modification in composite/example/experiment.nn)

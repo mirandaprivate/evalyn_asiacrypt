@@ -9,7 +9,7 @@ use composite::protocols::nn::ProtocolNN;
 
 use mat::MyShortInt;
 
-const DEPTH: usize = 1024;
+const DEPTH: usize = 16;
 const SHAPE: (usize, usize) = (1024, 1024);
 
 fn main() -> io::Result<()> {
@@ -58,8 +58,8 @@ fn experiment_nn(_iter: u64) {
 
     println!("*************************************************************************");
     println!("========NN Experiment Results======================================");
-    println!("🕒 \x1b[1m Verifying took {:.6} seconds \x1b[0m", duration_prover);
-    println!("🕒 \x1b[1m Verifying took {:.6} seconds \x1b[0m", duration_verify);
+    println!("🕒 \x1b[1m Proving time: {:.6} s \x1b[0m", duration_prover);
+    println!("🕒 \x1b[1m Verification time: {:.6} s \x1b[0m", duration_verify);
     println!("⬜ \x1b[1m Proof size: {} B \x1b[0m", nn.get_compressed_proof_size());
     println!("⬜ \x1b[1m NN Commitment size: {:?} B \x1b[0m", nn.get_nn_commitment_size());
     println!("========End NN Experiment Results==================================");
