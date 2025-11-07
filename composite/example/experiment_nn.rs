@@ -9,7 +9,7 @@ use composite::protocols::nn::ProtocolNN;
 
 use mat::MyShortInt;
 
-const DEPTH: usize = 16;
+const DEPTH: usize = 1024;
 const SHAPE: (usize, usize) = (1024, 1024);
 
 fn main() -> io::Result<()> {
