@@ -13,7 +13,7 @@ It provides building blocks for matrix-oriented zkSNARK protocols and a composit
 cargo build --workspace --release
 
 # 2. Run the neural network experiment (fast demo with depth=16)
-RAYON_NUM_THREADS=8 cargo run --release -p composite --features jemalloc --example experiment_nn
+RAYON_NUM_THREADS=8 cargo run --release -p composite --example experiment_nn
 
 # 3. Run tests to verify installation
 cargo test --workspace --release
@@ -97,13 +97,11 @@ We maintain local changes for experimental features and integration with this wo
   - `rayon` (1.7): For parallel computation
   - `rand` (0.9): Random number generation
   - `chrono` (0.4): Time measurement and logging
-  - Optional: `jemallocator` (0.5) and `jemalloc-ctl` (0.5) for memory optimization
 
 ### Performance Recommendations
 - Build with `--release` flag for optimal performance
 - Set `RAYON_NUM_THREADS` environment variable to control parallelism
 - Use Linux or WSL2 on Windows for better Rayon parallelism performance
-- Consider using the `jemalloc` feature for memory optimization
 
 ## Building the Artifact
 
@@ -131,10 +129,10 @@ The current code is configured for a fast demonstration with 16 layers:
 
 ```bash
 # Run with optimal settings (recommended)
-RAYON_NUM_THREADS=64 cargo run --release -p composite --features jemalloc --example experiment_nn
+RAYON_NUM_THREADS=64 cargo run --release -p composite --example experiment_nn
 
 # Run with fewer threads for limited hardware
-RAYON_NUM_THREADS=8 cargo run --release -p composite --features jemalloc --example experiment_nn
+RAYON_NUM_THREADS=8 cargo run --release -p composite --example experiment_nn
 ```
 
 **Current default settings:**
@@ -156,8 +154,8 @@ To reproduce the exact paper results with 1024 layers, modify the code:
 
 2. **Rebuild and run:**
    ```bash
-   cargo build --workspace --release
-   RAYON_NUM_THREADS=64 cargo run --release -p composite --features jemalloc --example experiment_nn
+  cargo build --workspace --release
+  RAYON_NUM_THREADS=64 cargo run --release -p composite --example experiment_nn
    ```
 
 **Paper configuration settings:**
@@ -168,7 +166,6 @@ To reproduce the exact paper results with 1024 layers, modify the code:
 
 ### Configuration Options
 - **Thread Control**: Set `RAYON_NUM_THREADS` to limit parallel execution
-- **Memory Optimization**: Use `--features jemalloc` for better memory management
 - **Output**: All results are displayed in the console output
 
 
@@ -212,8 +209,8 @@ To reproduce the full paper results with 1024 layers:
 
 2. **Rebuild and run:**
    ```bash
-   cargo build --workspace --release
-   RAYON_NUM_THREADS=64 cargo run --release -p composite --features jemalloc --example experiment_nn
+  cargo build --workspace --release
+  RAYON_NUM_THREADS=64 cargo run --release -p composite --example experiment_nn
    ```
 
 ### System Requirements by Configuration
@@ -353,10 +350,10 @@ The `experiment_nn` example produces detailed timing and memory usage statistics
 - **Thread control**: Set `RAYON_NUM_THREADS` environment variable in bash:
   ```bash
   # Recommended for reproduction (matches paper experiments)
-  RAYON_NUM_THREADS=64 cargo run --release -p composite --features jemalloc --example experiment_nn
+  RAYON_NUM_THREADS=64 cargo run --release -p composite --example experiment_nn
   
   # For limited hardware
-  RAYON_NUM_THREADS=8 cargo run --release -p composite --features jemalloc --example experiment_nn
+  RAYON_NUM_THREADS=8 cargo run --release -p composite --example experiment_nn
   ```
 
 #### Linux Recommendations

@@ -35,7 +35,6 @@ merlin = { version = "3.0.0", default-features = false }
 sha2 = "0.10.8"
 
 libc = "0.2"
-jemallocator = "0.5"
 
 
 
