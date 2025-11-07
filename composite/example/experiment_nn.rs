@@ -34,15 +34,21 @@ fn experiment_nn(_iter: u64) {
 
    
     nn.commit_to_pars();
+
+    let timer_prover_1 = Instant::now();
     nn.commit_to_witness();
     nn.reduce_prover_and_building_pop_circuit();
+    let duration_prover_1 = timer_prover_1.elapsed().as_secs_f64();
+
     nn.commit_to_pop_circuits();
+    
 
-
-
+    let timer_prover_2 = Instant::now();
     nn.gen_pop_proof();
     nn.open_leaf_commitment();
     nn.prove_fs();
+    let duration_prover_2 = timer_prover_2.elapsed().as_secs_f64();
+    let duration_prover = duration_prover_1 + duration_prover_2;
 
 
     let timer_verify = Instant::now();
@@ -52,6 +58,7 @@ fn experiment_nn(_iter: u64) {
 
     println!("*************************************************************************");
     println!("========NN Experiment Results======================================");
+    println!("🕒 \x1b[1m Verifying took {:.6} seconds \x1b[0m", duration_prover);
     println!("🕒 \x1b[1m Verifying took {:.6} seconds \x1b[0m", duration_verify);
     println!("⬜ \x1b[1m Proof size: {} B \x1b[0m", nn.get_compressed_proof_size());
     println!("⬜ \x1b[1m NN Commitment size: {:?} B \x1b[0m", nn.get_nn_commitment_size());
