@@ -9,8 +9,8 @@ use composite::protocols::nn::ProtocolNN;
 
 use mat::MyShortInt;
 
-const DEPTH: usize = 128;
-const SHAPE: (usize, usize) = (16, 16);
+const DEPTH: usize = 1024;
+const SHAPE: (usize, usize) = (4, 4);
 
 fn main() -> io::Result<()> {
     run_with_monitor(

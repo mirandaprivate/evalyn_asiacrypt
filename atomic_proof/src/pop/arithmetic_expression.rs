@@ -232,15 +232,21 @@ impl<F: PrimeField> ConstraintSynthesizer<F> for ConstraintSystemBuilder<F> {
         }
 
         // Prepare combined concrete values in the same order [pri..., pub...]
-        let mut combined_inputs = self.pri_inputs.clone();
-        combined_inputs.extend_from_slice(&self.pub_inputs);
+        let combined_inputs: Option<Vec<F>> = if self.num_pri_inputs + self.num_pub_inputs > 0 {
+            let mut vec = self.pri_inputs.clone();
+            vec.extend_from_slice(&self.pub_inputs);
+            Some(vec)
+        } else {
+            None
+        };
+        let combined_inputs_ref = combined_inputs.as_deref();
 
         // Generate R1CS constraints for each arithmetic constraint
         for constraint in self.arithmetic_constraints.iter() {
             let expr_var = synthesize_expression_constraints(
                 constraint,
                 &input_vars,
-                &Some(combined_inputs.clone()),
+                combined_inputs_ref,
                 public_input_start_index,
                 cs.clone(),
             )?;
@@ -534,7 +540,7 @@ impl<F: PrimeField> Mul<F> for ArithmeticExpression<F> {
 fn synthesize_expression_constraints<F: PrimeField>(
     expr: &ArithmeticExpression<F>,
     input_vars: &[FpVar<F>],                 // unified input vars: [pri..., pub...]
-    inputs: &Option<Vec<F>>,                  // unified concrete values: [pri..., pub...]
+    inputs: Option<&[F]>,                    // unified concrete values: [pri..., pub...]
     public_input_start_index: usize,          // starting index of public segment in unified vectors
     cs: ConstraintSystemRef<F>,
 ) -> Result<FpVar<F>, SynthesisError> {
