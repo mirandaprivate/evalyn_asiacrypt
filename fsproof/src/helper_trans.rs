@@ -94,6 +94,21 @@ impl<F: PrimeField + UniformRand + Absorb + CanonicalSerialize + CanonicalDeseri
         bytes.len()
     }
 
+    pub fn count_elements(&self) -> (usize, usize) {
+        let mut challenges = 0usize;
+        let mut responses = 0usize;
+        for (idx, elem) in self.trans_seq.iter().enumerate() {
+            if idx == 0 {
+                continue;
+            }
+            match elem {
+                TransElem::Challenge(_) => challenges += 1,
+                TransElem::Response(_) => responses += 1,
+            }
+        }
+        (challenges, responses)
+    }
+
     pub fn get_at_position(&self, pointer: usize) -> F {
         match &self.trans_seq[pointer] {
             TransElem::Challenge(ch) => *ch,

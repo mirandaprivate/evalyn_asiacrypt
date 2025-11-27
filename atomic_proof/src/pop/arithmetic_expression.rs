@@ -314,21 +314,33 @@ impl<F: PrimeField> ArithmeticExpression<F> {
         if left_vec.is_empty() || right_vec.is_empty() {
             return ArithmeticExpression::Constant(F::zero());
         }
-        
+
         if left_vec.len() != right_vec.len() {
-            panic!("Vector length mismatch in inner_product: {} vs {}", left_vec.len(), right_vec.len());
+            panic!(
+                "Vector length mismatch in inner_product: {} vs {}",
+                left_vec.len(),
+                right_vec.len()
+            );
         }
-        
-        // Start with the first product
-        let mut result = ArithmeticExpression::mul(left_vec[0].clone(), right_vec[0].clone());
-        
-        // Add remaining products
-        for i in 1..left_vec.len() {
-            let product = ArithmeticExpression::mul(left_vec[i].clone(), right_vec[i].clone());
-            result = ArithmeticExpression::add(result, product);
+
+        // Use a balanced recursion so stack depth grows O(log n) instead of O(n).
+        fn balanced_inner_product<F: PrimeField>(
+            left: &[ArithmeticExpression<F>],
+            right: &[ArithmeticExpression<F>],
+        ) -> ArithmeticExpression<F> {
+            match left.len() {
+                0 => ArithmeticExpression::Constant(F::zero()),
+                1 => ArithmeticExpression::mul(left[0].clone(), right[0].clone()),
+                len => {
+                    let mid = len / 2;
+                    let left_expr = balanced_inner_product(&left[..mid], &right[..mid]);
+                    let right_expr = balanced_inner_product(&left[mid..], &right[mid..]);
+                    ArithmeticExpression::add(left_expr, right_expr)
+                }
+            }
         }
-        
-        result
+
+        balanced_inner_product(left_vec, right_vec)
     }
 
     // Create an expression representing a hat variable (transcript variable)

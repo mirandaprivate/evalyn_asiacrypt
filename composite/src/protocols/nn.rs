@@ -223,6 +223,8 @@ where
 
         let proof_size = trans.get_proof_size_in_bytes();
         println!("⬜ \x1b[1m Proof size before PoP compression: {} B \x1b[0m", proof_size);
+        let (num_challenges, num_responses) = trans.count_elements();
+        println!("📊 \x1b[1m Transcript stats: {} challenges, {} responses \x1b[0m", num_challenges, num_responses);
 
         println!("************************************************************************");
 
