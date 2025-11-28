@@ -544,114 +544,148 @@ fn synthesize_expression_constraints<F: PrimeField>(
     public_input_start_index: usize,          // starting index of public segment in unified vectors
     cs: ConstraintSystemRef<F>,
 ) -> Result<FpVar<F>, SynthesisError> {
-    match expr {
-        // Constant: directly create a constant variable
-        ArithmeticExpression::Constant(value) => {
-            Ok(FpVar::Constant(*value))
-        }
-        // Map PubInput(i) -> input_vars[public_input_start_index + i]
-        ArithmeticExpression::PubInput(index) => input_vars
-            .get(public_input_start_index + *index)
-            .cloned()
-            .ok_or(SynthesisError::Unsatisfiable),
-        // Map PriInput(i) -> input_vars[i]
-        ArithmeticExpression::PriInput(index) => input_vars
-            .get(*index)
-            .cloned()
-            .ok_or(SynthesisError::Unsatisfiable),
-        // Addition: intermediate result as witness
-        ArithmeticExpression::Add { left, right } => {
-            let left_var = synthesize_expression_constraints(left, input_vars, inputs, public_input_start_index, cs.clone())?;
-            let right_var = synthesize_expression_constraints(right, input_vars, inputs, public_input_start_index, cs.clone())?;
+    enum StackEntry<'a, F: PrimeField> {
+        Enter(&'a ArithmeticExpression<F>),
+        Exit(&'a ArithmeticExpression<F>),
+    }
 
-            // Compute the expected addition result
-            let expected_sum = if let Some(values) = inputs {
-                left.evaluate_combined(values, public_input_start_index).map_err(|_| SynthesisError::AssignmentMissing)? +
-                right.evaluate_combined(values, public_input_start_index).map_err(|_| SynthesisError::AssignmentMissing)?
-            } else {
-                F::zero() // Default value when no specific value is available
-            };
+    let mut stack = vec![StackEntry::Enter(expr)];
+    let mut results: Vec<(FpVar<F>, Option<F>)> = Vec::new();
 
-            // Create witness variable to store addition result
-            let sum_var = FpVar::new_witness(cs.clone(), || Ok(expected_sum))?;
-
-            // Add constraint: sum_var = left_var + right_var
-            let computed_sum = &left_var + &right_var;
-            sum_var.enforce_equal(&computed_sum)?;
-            
-            Ok(sum_var)
-        }
-        // Subtraction: intermediate result as witness
-        ArithmeticExpression::Sub { left, right } => {
-            let left_var = synthesize_expression_constraints(left, input_vars, inputs, public_input_start_index, cs.clone())?;
-            let right_var = synthesize_expression_constraints(right, input_vars, inputs, public_input_start_index, cs.clone())?;
-
-            // Compute the expected subtraction result
-            let expected_diff = if let Some(values) = inputs {
-                left.evaluate_combined(values, public_input_start_index).map_err(|_| SynthesisError::AssignmentMissing)? -
-                right.evaluate_combined(values, public_input_start_index).map_err(|_| SynthesisError::AssignmentMissing)?
-            } else {
-                F::zero()
-            };
-
-            // Create witness variable to store subtraction result
-            let diff_var = FpVar::new_witness(cs.clone(), || Ok(expected_diff))?;
-
-            // Add constraint: diff_var = left_var - right_var
-            let computed_diff = &left_var - &right_var;
-            diff_var.enforce_equal(&computed_diff)?;
-            
-            Ok(diff_var)
-        }
-        // Multiplication: intermediate result as witness
-        ArithmeticExpression::Mul { left, right } => {
-            let left_var = synthesize_expression_constraints(left, input_vars, inputs, public_input_start_index, cs.clone())?;
-            let right_var = synthesize_expression_constraints(right, input_vars, inputs, public_input_start_index, cs.clone())?;
-
-            // Compute the expected multiplication result
-            let expected_product = if let Some(values) = inputs {
-                left.evaluate_combined(values, public_input_start_index).map_err(|_| SynthesisError::AssignmentMissing)? *
-                right.evaluate_combined(values, public_input_start_index).map_err(|_| SynthesisError::AssignmentMissing)?
-            } else {
-                F::zero()
-            };
-
-            // Create witness variable to store multiplication result
-            let product_var = FpVar::new_witness(cs.clone(), || Ok(expected_product))?;
-
-            // Add constraint: product_var = left_var * right_var
-            let computed_product = &left_var * &right_var;
-            product_var.enforce_equal(&computed_product)?;
-            
-            Ok(product_var)
-        }
-        // Inverse: intermediate result as witness, with multiplication constraint
-        ArithmeticExpression::Inv { inner } => {
-            let inner_var = synthesize_expression_constraints(inner, input_vars, inputs, public_input_start_index, cs.clone())?;
-
-            // Compute the expected inverse result
-            let expected_inverse = if let Some(values) = inputs {
-                let inner_val = inner.evaluate_combined(values, public_input_start_index).map_err(|_| SynthesisError::AssignmentMissing)?;
-                if inner_val == F::zero() {
-                    return Err(SynthesisError::DivisionByZero);
+    while let Some(entry) = stack.pop() {
+        match entry {
+            StackEntry::Enter(node) => match node {
+                ArithmeticExpression::Constant(value) => {
+                    results.push((FpVar::Constant(*value), Some(*value)));
                 }
-                inner_val.inverse().ok_or(SynthesisError::DivisionByZero)?
-            } else {
-                F::one() // Default value (this should not happen in practice)
-            };
-
-            // Create witness variable to store inverse result
-            let inverse_var = FpVar::new_witness(cs.clone(), || Ok(expected_inverse))?;
-
-            // Add inverse constraint: inverse_var * inner_var = 1
-            // This ensures that inverse_var is indeed the multiplicative inverse of inner_var
-            let product = &inverse_var * &inner_var;
-            let one_var = FpVar::Constant(F::one());
-            product.enforce_equal(&one_var)?;
-            
-            Ok(inverse_var)
+                ArithmeticExpression::PubInput(index) => {
+                    let var = input_vars
+                        .get(public_input_start_index + *index)
+                        .cloned()
+                        .ok_or(SynthesisError::Unsatisfiable)?;
+                    let value = if let Some(values) = inputs {
+                        Some(
+                            values
+                                .get(public_input_start_index + *index)
+                                .copied()
+                                .ok_or(SynthesisError::AssignmentMissing)?,
+                        )
+                    } else {
+                        None
+                    };
+                    results.push((var, value));
+                }
+                ArithmeticExpression::PriInput(index) => {
+                    let var = input_vars
+                        .get(*index)
+                        .cloned()
+                        .ok_or(SynthesisError::Unsatisfiable)?;
+                    let value = if let Some(values) = inputs {
+                        Some(
+                            values
+                                .get(*index)
+                                .copied()
+                                .ok_or(SynthesisError::AssignmentMissing)?,
+                        )
+                    } else {
+                        None
+                    };
+                    results.push((var, value));
+                }
+                ArithmeticExpression::Add { left, right }
+                | ArithmeticExpression::Sub { left, right }
+                | ArithmeticExpression::Mul { left, right } => {
+                    stack.push(StackEntry::Exit(node));
+                    stack.push(StackEntry::Enter(right));
+                    stack.push(StackEntry::Enter(left));
+                }
+                ArithmeticExpression::Inv { inner } => {
+                    stack.push(StackEntry::Exit(node));
+                    stack.push(StackEntry::Enter(inner));
+                }
+            },
+            StackEntry::Exit(node) => match node {
+                ArithmeticExpression::Add { .. } => {
+                    let (right_var, right_val) = results
+                        .pop()
+                        .ok_or(SynthesisError::Unsatisfiable)?;
+                    let (left_var, left_val) = results
+                        .pop()
+                        .ok_or(SynthesisError::Unsatisfiable)?;
+                    let expected = match (left_val, right_val) {
+                        (Some(l), Some(r)) => Some(l + r),
+                        _ => None,
+                    };
+                    let assignment = expected.unwrap_or_else(|| F::zero());
+                    let sum_var = FpVar::new_witness(cs.clone(), || Ok(assignment))?;
+                    let computed_sum = &left_var + &right_var;
+                    sum_var.enforce_equal(&computed_sum)?;
+                    results.push((sum_var, expected));
+                }
+                ArithmeticExpression::Sub { .. } => {
+                    let (right_var, right_val) = results
+                        .pop()
+                        .ok_or(SynthesisError::Unsatisfiable)?;
+                    let (left_var, left_val) = results
+                        .pop()
+                        .ok_or(SynthesisError::Unsatisfiable)?;
+                    let expected = match (left_val, right_val) {
+                        (Some(l), Some(r)) => Some(l - r),
+                        _ => None,
+                    };
+                    let assignment = expected.unwrap_or_else(|| F::zero());
+                    let diff_var = FpVar::new_witness(cs.clone(), || Ok(assignment))?;
+                    let computed_diff = &left_var - &right_var;
+                    diff_var.enforce_equal(&computed_diff)?;
+                    results.push((diff_var, expected));
+                }
+                ArithmeticExpression::Mul { .. } => {
+                    let (right_var, right_val) = results
+                        .pop()
+                        .ok_or(SynthesisError::Unsatisfiable)?;
+                    let (left_var, left_val) = results
+                        .pop()
+                        .ok_or(SynthesisError::Unsatisfiable)?;
+                    let expected = match (left_val, right_val) {
+                        (Some(l), Some(r)) => Some(l * r),
+                        _ => None,
+                    };
+                    let assignment = expected.unwrap_or_else(|| F::zero());
+                    let product_var = FpVar::new_witness(cs.clone(), || Ok(assignment))?;
+                    let computed_product = &left_var * &right_var;
+                    product_var.enforce_equal(&computed_product)?;
+                    results.push((product_var, expected));
+                }
+                ArithmeticExpression::Inv { .. } => {
+                    let (inner_var, inner_val) = results
+                        .pop()
+                        .ok_or(SynthesisError::Unsatisfiable)?;
+                    let expected = match inner_val {
+                        Some(value) => {
+                            if value == F::zero() {
+                                return Err(SynthesisError::DivisionByZero);
+                            }
+                            Some(value.inverse().ok_or(SynthesisError::DivisionByZero)?)
+                        }
+                        None => None,
+                    };
+                    let assignment = expected.unwrap_or_else(|| F::one());
+                    let inverse_var = FpVar::new_witness(cs.clone(), || Ok(assignment))?;
+                    let product = &inverse_var * &inner_var;
+                    let one_var = FpVar::Constant(F::one());
+                    product.enforce_equal(&one_var)?;
+                    results.push((inverse_var, expected));
+                }
+                _ => unreachable!("Exit entries are only pushed for composite expressions"),
+            },
         }
     }
+
+    if results.len() != 1 {
+        return Err(SynthesisError::Unsatisfiable);
+    }
+
+    Ok(results.pop().unwrap().0)
 }
 
 impl<F: PrimeField> ArithmeticExpression<F> {
